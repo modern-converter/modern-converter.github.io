@@ -256,8 +256,6 @@
             <div class="btn">Przeglądaj pliki</div>
             <div class="limits" id="limitInfo">
               <span class="pill" title="Limit dobierany automatycznie do pamięci i wydajności urządzenia">Automatyczny limit urządzenia</span>
-              <span class="pill">500 MB</span>
-              <span class="pill">1 GB</span>
               <span class="pill">Przetwarzanie po stronie klienta</span>
             </div>
           </div>
@@ -431,7 +429,6 @@ async function ffmpegConvert(file, outputFmt){
 
     await ffmpeg.run(...args);
     const data = ffmpeg.FS('readFile', outName);
-    // sprzątanie
     try{ ffmpeg.FS('unlink', inName); }catch{}
     try{ ffmpeg.FS('unlink', outName); }catch{}
 
@@ -519,7 +516,7 @@ const formatsByCategory = {
 };
 const extToCategory = {
   png:'image', jpg:'image', jpeg:'image', webp:'image', avif:'image', bmp:'image', gif:'image', svg:'image', heic:'image',
-  wav:'audio', mp3:'audio', m4a:'audio', ogg:'audio', m4a:'audio', flac:'audio',
+  wav:'audio', mp3:'audio', m4a:'audio', ogg:'audio', flac:'audio',
   txt:'document', md:'document', html:'document', pdf:'document',
   json:'code', csv:'code', js:'code',
   mp4:'video', webm:'video', mov:'video', mkv:'video', avi:'video', hevc:'video'
@@ -590,16 +587,15 @@ function seoLabel(fmt){
   return map[fmt] || fmt.toUpperCase();
 }
 
-/* Device-safe size estimation */
+/* Device-safe size estimation – bardziej hojne */
 function estimateSafeLimitBytes(){
   const mem = navigator.deviceMemory || 4;
-  const cores = (navigator.hardwareConcurrency || 4);
   const ua = navigator.userAgent.toLowerCase();
   const isMobile = /iphone|ipad|android|mobile/.test(ua);
-  let base = Math.min(mem * 0.8, 20) * GB;
-  if(isMobile) base *= 0.6;
-  if(cores <= 2) base *= 1.1;
-  base = Math.max(200*MB, Math.min(base, 10*GB));
+  // 90% RAMu, lekka redukcja na mobile (70%), tylko dolny limit 200MB
+  let base = mem * 0.9 * GB;
+  if(isMobile) base *= 0.7;
+  base = Math.max(200*MB, base);
   return Math.round(base);
 }
 function humanSize(bytes){
@@ -610,9 +606,7 @@ function humanSize(bytes){
   return bytes+' B';
 }
 function getSelectedLimitBytes(){
-  const v = maxSizeEl.value;
-  if(v === '500') return 500*MB;
-  if(v === '1000') return 1000*MB;
+  // tylko automatyczny limit
   return estimateSafeLimitBytes();
 }
 
@@ -1007,7 +1001,6 @@ async function convertAudio(file, fmt){
     audioBuf = null;
   }
 
-  // Formaty wymagające ffmpeg
   if(fmt === 'mp3' || fmt === 'm4a'){
     try{
       return await ffmpegConvert(file, fmt);
@@ -1024,7 +1017,6 @@ async function convertAudio(file, fmt){
   if(fmt === 'wav') return pcmToWavBlob(audioBuf);
   if(fmt === 'ogg'){
     try{
-      // najlepiej użyć ffmpeg do enkodowania OGG? fallback – proste opakowanie
       const wav = await pcmToWavBlob(audioBuf);
       return new Blob([await wav.arrayBuffer()], {type:'audio/ogg'});
     }catch{}
@@ -1117,7 +1109,6 @@ async function tryReadText(file){
 
 /* Video (lite) */
 async function convertVideo(file, fmt){
-  // Obsługa mp4/mov przez ffmpeg (opakowanie / rewrap)
   if(fmt === 'mp4' || fmt === 'mov'){
     try{
       return await ffmpegConvert(file, fmt);
@@ -1319,4 +1310,3 @@ init();
 </script>
 </body>
 </html>
-
