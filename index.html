@@ -4,8 +4,8 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Modern Forge — Konwerter plików online | Bezpieczna konwersja w przeglądarce</title>
-<meta name="description" content="Modern Forge to szybki i bezpieczny konwerter plików online. Konwertuj obrazy, audio, dokumenty i wideo lokalnie w przeglądarce. Bez wysyłania plików na serwer.">
-<link rel="canonical" href="https://example.local/modern-forge">
+<meta name="description" content="Filetool to szybki, darmowy i bezpieczny konwerter plików online. Konwertuj obrazy, audio, dokumenty i wideo lokalnie w przeglądarce. Bez wysyłania plików na serwer.">
+<link rel="canonical" href="https://filetool.pl">
 <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1">
 <meta name="keywords" content="konwerter plików, konwerter obrazów, konwersja audio, pdf online, webp, avif, webm, konwersja dokumentów, konwersja wideo, offline, prywatność">
 <style>
@@ -240,7 +240,7 @@
   <div class="app">
 
     <section class="hero">
-      <h1>Konwerter plików Modern Forge</h1>
+      <h1>DARMOWY Konwerter plików FileTool</h1>
       <p>Konwertuj obrazy, audio, dokumenty i wideo bezpośrednio w przeglądarce. Twoje pliki pozostają na urządzeniu i nigdy nie są wysyłane na serwer.</p>
       <p class="ghost" style="margin-top:6px">Szybka i bezpieczna konwersja online • 100% lokalnie • Bez konta</p>
     </section>
@@ -325,7 +325,7 @@
       <div class="content-grid">
         <div class="panel">
           <div class="title"><span class="dot"></span> O Modern Forge</div>
-          <p>Modern Forge to prywatny, działający na urządzeniu konwerter plików. Działa całkowicie w przeglądarce, używając web API do przetwarzania plików bez ich wysyłania.</p>
+          <p>Filetool to prywatny, działający na urządzeniu konwerter plików. Działa całkowicie w przeglądarce, używając web API do przetwarzania plików bez ich wysyłania.</p>
           <p>Stawiamy na bezpieczeństwo, szybkość i dopracowany interfejs. Aplikacja dopasowuje się do możliwości urządzenia, dbając o pamięć i wydajność.</p>
           <div class="kpi">
             <div class="panel">
@@ -540,10 +540,10 @@ function estimateSafeLimitBytes(){
   const cores = (navigator.hardwareConcurrency || 4);
   const ua = navigator.userAgent.toLowerCase();
   const isMobile = /iphone|ipad|android|mobile/.test(ua);
-  let base = Math.min(mem * 0.5, 4) * GB;
+  let base = Math.min(mem * 0.5, 10) * GB;
   if(isMobile) base *= 0.35;
-  if(cores <= 2) base *= 0.6;
-  base = Math.max(200*MB, Math.min(base, 2*GB));
+  if(cores <= 2) base *= 1;
+  base = Math.max(200*MB, Math.min(base, 10*GB));
   return Math.round(base);
 }
 function humanSize(bytes){
@@ -1229,6 +1229,7 @@ init();
 </script>
 </body>
 </html>
+
 
 
 
