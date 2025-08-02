@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="pl">
 <head>
 <meta charset="utf-8" />
@@ -212,167 +212,239 @@
   .btn-row{ display:flex; gap:10px; flex-wrap:wrap }
 </style>
 
-<!-- lamejs dla MP3 fallbacku -->
-<script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.0/lame.min.js"></script>
+<script type="importmap">
+{
+  "imports": {}
+}
+</script>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1712836182508924"
+     crossorigin="anonymous"></script>
+</head>
+<body>
+<div class="bg-orbs" aria-hidden="true"></div>
+
+<header class="nav" role="navigation" aria-label="Nawigacja główna">
+  <div class="brand">
+    <div class="logo" aria-hidden="true"></div>
+    <span>Modern Forge</span>
+  </div>
+  <nav class="links" aria-label="Linki">
+    <a class="chip" data-route="home" aria-current="page">Konwerter</a>
+    <a class="chip" data-route="about">O projekcie</a>
+    <a class="chip" data-route="security">Bezpieczeństwo</a>
+    <a class="chip" data-route="help">Pomoc</a>
+  </nav>
+</header>
+
+<main class="container">
+  <div class="app">
+
+    <section class="hero">
+      <h1>DARMOWY Konwerter plików FileTool</h1>
+      <p>Konwertuj obrazy, audio, dokumenty i wideo bezpośrednio w przeglądarce. Twoje pliki pozostają na urządzeniu i nigdy nie są wysyłane na serwer.</p>
+      <p class="ghost" style="margin-top:6px">Szybka i bezpieczna konwersja online • 100% lokalnie • Bez konta</p>
+    </section>
+
+    <section class="page active" id="page-home" aria-label="Konwerter">
+      <div id="home-grid">
+        <section class="panel" aria-label="Przesyłanie">
+          <div class="title"><span class="dot"></span> Prześlij pliki</div>
+          <div id="drop" class="drop" tabindex="0" role="button" aria-label="Przeciągnij i upuść pliki lub wybierz z dysku">
+            <input id="fileInput" type="file" multiple aria-label="Wybór plików">
+            <div class="big">Przeciągnij i upuść pliki tutaj</div>
+            <div class="small">albo</div>
+            <div class="btn">Przeglądaj pliki</div>
+            <div class="limits" id="limitInfo">
+              <span class="pill" title="Limit dobierany automatycznie do pamięci i wydajności urządzenia">Automatyczny limit urządzenia</span>
+              <span class="pill">Przetwarzanie po stronie klienta</span>
+            </div>
+          </div>
+          <div class="file-list" id="fileList" aria-live="polite"></div>
+        </section>
+
+        <section class="panel" aria-label="Ustawienia">
+          <div class="title"><span class="dot"></span> Ustawienia</div>
+          <div class="format-wrap">
+            <div class="row">
+              <div class="number" style="min-width:220px">
+                <label for="outFormat">Format wyjściowy</label>
+                <select id="outFormat" aria-label="Format wyjściowy"></select>
+              </div>
+              <div class="number" style="min-width:220px">
+                <label for="maxSize">Maksymalny łączny rozmiar</label>
+                <select id="maxSize">
+                  <option value="auto">Auto (bezpieczne dla urządzenia)</option>
+                </select>
+              </div>
+              <div class="number" style="min-width:220px">
+                <label for="parallel">Równoległe konwersje</label>
+                <input id="parallel" type="number" min="1" max="6" value="2" inputmode="numeric">
+              </div>
+              <div class="spacer"></div>
+              <button id="convertBtn" class="btn" aria-label="Rozpocznij konwersję">Konwertuj</button>
+              <button id="clearBtn" class="btn secondary" aria-label="Wyczyść listę">Wyczyść</button>
+            </div>
+
+            <div class="row">
+              <div class="prog" style="flex:1"><i id="progressBar" style="width:0%"></i></div>
+              <span id="progressText" style="min-width:110px; text-align:right">0%</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" aria-label="Wyniki">
+          <div class="title"><span class="dot"></span> Wyniki</div>
+          <div class="file-list" id="resultList"></div>
+        </section>
+      </div>
+    </section>
+
+    <section class="page" id="page-progress" aria-label="Trwa konwersja">
+      <section class="panel">
+        <div class="title"><span class="dot"></span> Konwersja</div>
+        <div class="progress-wrap">
+          <div class="big-title" id="progressTitle">Pracujemy nad Twoimi plikami…</div>
+          <div class="row">
+            <div class="prog" style="flex:1"><i id="progressBar2" style="width:0%"></i></div>
+            <span id="progressText2" style="min-width:110px; text-align:right">0%</span>
+          </div>
+          <div class="btn-row">
+            <a id="downloadAll" class="btn" download>Pobierz</a>
+            <button id="convertMore" class="btn secondary">Konwertuj więcej</button>
+          </div>
+          <div class="ghost" id="progressHint">Pozostaw kartę otwartą — konwersja odbywa się lokalnie.</div>
+        </div>
+      </section>
+    </section>
+
+    <section class="page" id="page-about" aria-label="O projekcie">
+      <div class="content-grid">
+        <div class="panel">
+          <div class="title"><span class="dot"></span> O Modern Forge</div>
+          <p>Filetool to prywatny, działający na urządzeniu konwerter plików. Działa całkowicie w przeglądarce, używając web API do przetwarzania plików bez ich wysyłania.</p>
+          <p>Stawiamy na bezpieczeństwo, szybkość i dopracowany interfejs. Aplikacja dopasowuje się do możliwości urządzenia, dbając o pamięć i wydajność.</p>
+          <div class="kpi">
+            <div class="panel">
+              <div class="big" style="font-weight:800; font-size:22px">100% Lokalnie</div>
+              <div class="subtle">Brak wysyłek</div>
+            </div>
+            <div class="panel">
+              <div class="big" style="font-weight:800; font-size:22px">Adaptacyjnie</div>
+              <div class="subtle">Bezpieczne limity</div>
+            </div>
+            <div class="panel">
+              <div class="big" style="font-weight:800; font-size:22px">Otwarcie</div>
+              <div class="subtle">Standardy webowe</div>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="title"><span class="dot"></span> Filozofia</div>
+          <p>Wierzymy, że potężne narzędzia mogą być proste, prywatne i dostępne. Nowoczesne przeglądarki dostarczają fundamentów do przetwarzania mediów, a przemyślany UX sprawia, że działają jak natywne aplikacje.</p>
+          <p>Część konwersji ma charakter „lite” ze względu na ograniczenia webowe, ale pozostaje lokalna i daje szeroką kompatybilność.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="page-security" aria-label="Bezpieczeństwo">
+      <div class="content-grid">
+        <div class="panel">
+          <div class="title"><span class="dot"></span> Bezpieczeństwo i prywatność</div>
+          <ul>
+            <li>Pliki nie opuszczają urządzenia. Wszystko dzieje się w przeglądarce.</li>
+            <li>Brak kont, brak śledzenia, brak analityki.</li>
+            <li>Heurystyki pamięci dbają o responsywność systemu.</li>
+            <li>Brak dodatkowych uprawnień; działamy w piaskownicy przeglądarki.</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <div class="title"><span class="dot"></span> Wskazówki</div>
+          <ul>
+            <li>Preferuj nowoczesne formaty (WebP/AVIF dla obrazów, WebM dla wideo) dla mniejszych plików.</li>
+            <li>Zwiększ „Równoległe konwersje” na desktopie, aby przyspieszyć batch.</li>
+            <li>Zmniejsz maksymalny rozmiar na urządzeniach z małą pamięcią.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="page-help" aria-label="Pomoc">
+      <div class="panel">
+        <div class="title"><span class="dot"></span> Szybki start</div>
+        <ol>
+          <li>Przeciągnij i upuść pliki do obszaru przesyłania.</li>
+          <li>Wybierz format wyjściowy (aplikacja dobierze odpowiedni na podstawie plików).</li>
+          <li>Kliknij Konwertuj i pobierz po zakończeniu.</li>
+        </ol>
+      </div>
+      <div class="panel">
+        <div class="title"><span class="dot"></span> FAQ</div>
+        <p><b>Dlaczego formaty „lite”?</b> Nie wszystkie enkodery są dostępne natywnie w przeglądarce. Zapewniamy lekkie, zgodne standardowo zastępniki.</p>
+        <p><b>Czy pliki są bezpieczne?</b> Tak. Wszystko przetwarzamy lokalnie — nic nie jest wysyłane.</p>
+      </div>
+    </section>
+
+    <footer>
+      <span>Działa w 100% lokalnie • Brak wysyłania plików</span>
+      <span>Optymalizacja dla komputerów, tabletów i telefonów</span>
+    </footer>
+  </div>
+</main>
+
 <script type="module">
-/* ---- FFmpeg / fallback logic ---- */
-const hasSharedArrayBuffer = typeof SharedArrayBuffer !== 'undefined';
-const useFFmpeg = hasSharedArrayBuffer;
+// FFmpeg wasm import i inicjalizacja
+import { createFFmpeg, fetchFile } from 'https://unpkg.com/@ffmpeg/ffmpeg@0.11.5/dist/ffmpeg.min.js';
+const ffmpeg = createFFmpeg({ log: false });
+const ffmpegReadyPromise = ffmpeg.load().catch(e => {
+  console.warn('FFmpeg nie załadował się:', e);
+});
 
-if (!hasSharedArrayBuffer) {
-  const warning = document.createElement('div');
-  warning.style.cssText = `
-    background: #2b2b2b;
-    color: #ffe066;
-    padding: 14px;
-    font-size: 15px;
-    border-left: 4px solid #ffcc00;
-    position: sticky;
-    top: 0;
-    z-index: 999;
-    font-family: system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
-    line-height:1.3;
-  `;
-  warning.innerHTML = `
-    <strong>Ograniczona funkcjonalność:</strong> Twoja przeglądarka nie udostępnia
-    <code>SharedArrayBuffer</code>, więc <strong>ffmpeg.wasm</strong> nie zadziała. 
-    Konwersja do MP3 użyje <code>lamejs</code>, inne formaty wymagające ffmpeg (M4A/MP4/MOV) są niedostępne.`;
-  document.body.prepend(warning);
-}
-
-let ffmpeg = null;
-let fetchFileFunc = () => { throw new Error('ffmpeg niezaładowany'); };
-let ffmpegReadyPromise = Promise.resolve();
-
-if (useFFmpeg) {
-  let ffmpegLoaderPromise;
-  function loadFFmpegLibrary() {
-    if (window.FFmpeg && window.FFmpeg.createFFmpeg && window.FFmpeg.fetchFile) {
-      return Promise.resolve();
-    }
-    if (ffmpegLoaderPromise) return ffmpegLoaderPromise;
-    ffmpegLoaderPromise = new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = 'https://unpkg.com/@ffmpeg/ffmpeg@0.11.5/dist/ffmpeg.min.js';
-      script.crossOrigin = 'anonymous';
-      script.onload = () => {
-        if (window.FFmpeg && window.FFmpeg.createFFmpeg && window.FFmpeg.fetchFile) {
-          resolve();
-        } else {
-          reject(new Error('Nie znaleziono FFmpeg po załadowaniu skryptu'));
-        }
-      };
-      script.onerror = () => reject(new Error('Nie udało się załadować skryptu FFmpeg'));
-      document.head.appendChild(script);
-    });
-    return ffmpegLoaderPromise;
-  }
-
-  ffmpegReadyPromise = (async () => {
-    try {
-      await loadFFmpegLibrary();
-      const { createFFmpeg, fetchFile } = FFmpeg;
-      fetchFileFunc = fetchFile;
-      ffmpeg = createFFmpeg({ log: false });
-      await ffmpeg.load();
-    } catch (e) {
-      console.warn('FFmpeg nie załadował się:', e);
-      ffmpeg = null;
-      throw e;
-    }
-  })();
-}
-
+// Pomocnicza funkcja do konwersji przez ffmpeg.wasm
 async function ffmpegConvert(file, outputFmt){
-  if (!ffmpeg) throw new Error('ffmpeg niedostępny');
-  await ffmpegReadyPromise;
-  const inputExt = (file.name.split('.').pop() || '').toLowerCase();
-  const inName = `input.${inputExt}`;
-  let outName;
-  if(outputFmt === 'mp3') outName = 'output.mp3';
-  else if(outputFmt === 'm4a') outName = 'output.m4a';
-  else if(outputFmt === 'mp4') outName = 'output.mp4';
-  else if(outputFmt === 'mov') outName = 'output.mov';
-  else outName = `output.${outputFmt}`;
+  try{
+    await ffmpegReadyPromise;
+    const inputExt = (file.name.split('.').pop() || '').toLowerCase();
+    const inName = `input.${inputExt}`;
+    let outName;
+    if(outputFmt === 'mp3') outName = 'output.mp3';
+    else if(outputFmt === 'm4a') outName = 'output.m4a';
+    else if(outputFmt === 'mp4') outName = 'output.mp4';
+    else if(outputFmt === 'mov') outName = 'output.mov';
+    else outName = `output.${outputFmt}`;
 
-  ffmpeg.FS('writeFile', inName, await fetchFileFunc(file));
+    ffmpeg.FS('writeFile', inName, await fetchFile(file));
 
-  const args = [];
-  if(outputFmt === 'mp3'){
-    args.push('-i', inName, '-codec:a', 'libmp3lame', '-qscale:a', '2', outName);
-  } else if(outputFmt === 'm4a'){
-    args.push('-i', inName, '-c:a', 'aac', '-b:a', '128k', outName);
-  } else if(outputFmt === 'mp4'){
-    args.push('-i', inName, '-c', 'copy', '-f', 'mp4', outName);
-  } else if(outputFmt === 'mov'){
-    args.push('-i', inName, '-c', 'copy', '-f', 'mov', outName);
-  } else {
-    args.push('-i', inName, outName);
+    const args = [];
+    if(outputFmt === 'mp3'){
+      args.push('-i', inName, '-codec:a', 'libmp3lame', '-qscale:a', '2', outName);
+    } else if(outputFmt === 'm4a'){
+      args.push('-i', inName, '-c:a', 'aac', '-b:a', '128k', outName);
+    } else if(outputFmt === 'mp4'){
+      args.push('-i', inName, '-c', 'copy', '-f', 'mp4', outName);
+    } else if(outputFmt === 'mov'){
+      args.push('-i', inName, '-c', 'copy', '-f', 'mov', outName);
+    } else {
+      args.push('-i', inName, outName);
+    }
+
+    await ffmpeg.run(...args);
+    const data = ffmpeg.FS('readFile', outName);
+    try{ ffmpeg.FS('unlink', inName); }catch{}
+    try{ ffmpeg.FS('unlink', outName); }catch{}
+
+    let mime = 'application/octet-stream';
+    if(outputFmt==='mp3') mime='audio/mpeg';
+    else if(outputFmt==='m4a') mime='audio/mp4';
+    else if(outputFmt==='mp4') mime='video/mp4';
+    else if(outputFmt==='mov') mime='video/quicktime';
+
+    return new Blob([data.buffer], {type: mime});
+  }catch(e){
+    console.warn('FFmpeg conversion error:', e);
+    throw e;
   }
-
-  await ffmpeg.run(...args);
-  const data = ffmpeg.FS('readFile', outName);
-  try{ ffmpeg.FS('unlink', inName); }catch{}
-  try{ ffmpeg.FS('unlink', outName); }catch{}
-
-  let mime = 'application/octet-stream';
-  if(outputFmt==='mp3') mime='audio/mpeg';
-  else if(outputFmt==='m4a') mime='audio/mp4';
-  else if(outputFmt==='mp4') mime='video/mp4';
-  else if(outputFmt==='mov') mime='video/quicktime';
-
-  return new Blob([data.buffer], {type: mime});
 }
 
-// lamejs-based MP3 fallback
-function audioBufferToMp3(audioBuffer, bitrate=128){
-  if (typeof lamejs === 'undefined') throw new Error('lamejs nie załadowany');
-  const numChannels = audioBuffer.numberOfChannels;
-  const sampleRate = audioBuffer.sampleRate;
-  const mp3encoder = new lamejs.Mp3Encoder(numChannels, sampleRate, bitrate);
-  const blockSize = 1152;
-  const mp3Data = [];
-
-  if (numChannels === 1) {
-    const channelData = audioBuffer.getChannelData(0);
-    for (let i = 0; i < channelData.length; i += blockSize) {
-      const chunk = channelData.subarray(i, i + blockSize);
-      const mp3buf = mp3encoder.encodeBuffer(chunk);
-      if (mp3buf.length > 0) mp3Data.push(new Uint8Array(mp3buf));
-    }
-  } else {
-    const left = audioBuffer.getChannelData(0);
-    const right = audioBuffer.getChannelData(1);
-    for (let i = 0; i < left.length; i += blockSize) {
-      const leftChunk = left.subarray(i, i + blockSize);
-      const rightChunk = right.subarray(i, i + blockSize);
-      const mp3buf = mp3encoder.encodeBuffer(leftChunk, rightChunk);
-      if (mp3buf.length > 0) mp3Data.push(new Uint8Array(mp3buf));
-    }
-  }
-  const tail = mp3encoder.flush();
-  if (tail.length > 0) mp3Data.push(new Uint8Array(tail));
-  return new Blob(mp3Data, { type: 'audio/mpeg' });
-}
-
-/* ---- Konfiguracja formatów z fallbackiem ---- */
-const formatsByCategory = {
-  image: ['png','jpeg','webp','avif','png-8','jpeg-low'],
-  audio: hasSharedArrayBuffer ? ['wav','mp3','m4a','ogg'] : ['wav','mp3','ogg'],
-  document: ['txt','md','pdf-lite','rtf-lite'],
-  video: hasSharedArrayBuffer ? ['gif-lite','webm-lite','thumb-webp','mp4','mov'] : ['gif-lite','webm-lite','thumb-webp'],
-  archive: ['zip-lite'],
-  code: ['txt','json','csv']
-};
-const extToCategory = {
-  png:'image', jpg:'image', jpeg:'image', webp:'image', avif:'image', bmp:'image', gif:'image', svg:'image', heic:'image',
-  wav:'audio', mp3:'audio', m4a:'audio', ogg:'audio', flac:'audio',
-  txt:'document', md:'document', html:'document', pdf:'document',
-  json:'code', csv:'code', js:'code',
-  mp4:'video', webm:'video', mov:'video', mkv:'video', avi:'video', hevc:'video'
-};
-
-/* ---- Reszta oryginalnego kodu (router, UI, konwersje etc.) ---- */
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 
@@ -405,7 +477,7 @@ function seoTitleFor(route){
   switch(route){
     case 'home': return base + ' | Szybka konwersja w przeglądarce';
     case 'about': return 'O Modern Forge | Prywatny konwerter plików';
-    case 'security': return 'Bezpieczeństwo i prywatności | Modern Forge';
+    case 'security': return 'Bezpieczeństwo i prywatność | Modern Forge';
     case 'help': return 'Pomoc i FAQ | Modern Forge';
     default: return base;
   }
@@ -432,6 +504,23 @@ const downloadAllBtn = $('#downloadAll');
 const convertMoreBtn = $('#convertMore');
 
 const KB = 1024, MB = 1024*KB, GB = 1024*MB;
+
+/* Formats per auto-detected category */
+const formatsByCategory = {
+  image: ['png','jpeg','webp','avif','png-8','jpeg-low'],
+  audio: ['wav','mp3','m4a','ogg'],
+  document: ['txt','md','pdf-lite','rtf-lite'],
+  video: ['gif-lite','webm-lite','thumb-webp','mp4','mov'],
+  archive: ['zip-lite'],
+  code: ['txt','json','csv']
+};
+const extToCategory = {
+  png:'image', jpg:'image', jpeg:'image', webp:'image', avif:'image', bmp:'image', gif:'image', svg:'image', heic:'image',
+  wav:'audio', mp3:'audio', m4a:'audio', ogg:'audio', flac:'audio',
+  txt:'document', md:'document', html:'document', pdf:'document',
+  json:'code', csv:'code', js:'code',
+  mp4:'video', webm:'video', mov:'video', mkv:'video', avi:'video', hevc:'video'
+};
 
 /* State */
 let files = [];
@@ -498,16 +587,15 @@ function seoLabel(fmt){
   return map[fmt] || fmt.toUpperCase();
 }
 
-/* Device-safe size estimation */
+/* Device-safe size estimation – bardziej hojne */
 function estimateSafeLimitBytes(){
   const mem = navigator.deviceMemory || 4;
-  const cores = (navigator.hardwareConcurrency || 4);
   const ua = navigator.userAgent.toLowerCase();
   const isMobile = /iphone|ipad|android|mobile/.test(ua);
-  let base = Math.min(mem * 0.8, 20) * GB;
-  if(isMobile) base *= 0.6;
-  if(cores <= 2) base *= 1.1;
-  base = Math.max(200*MB, Math.min(base, 10*GB));
+  // 90% RAMu, lekka redukcja na mobile (70%), tylko dolny limit 200MB
+  let base = mem * 0.9 * GB;
+  if(isMobile) base *= 0.7;
+  base = Math.max(200*MB, base);
   return Math.round(base);
 }
 function humanSize(bytes){
@@ -518,9 +606,7 @@ function humanSize(bytes){
   return bytes+' B';
 }
 function getSelectedLimitBytes(){
-  const v = maxSizeEl.value;
-  if(v === '500') return 500*MB;
-  if(v === '1000') return 1000*MB;
+  // tylko automatyczny limit
   return estimateSafeLimitBytes();
 }
 
@@ -915,39 +1001,17 @@ async function convertAudio(file, fmt){
     audioBuf = null;
   }
 
-  if (fmt === 'mp3') {
-    if (useFFmpeg && ffmpeg) {
-      try {
-        return await ffmpegConvert(file, 'mp3');
-      } catch(e){
-        console.warn('ffmpeg mp3 nie zadziałał, fallback do lamejs/wav', e);
-        if (audioBuf) {
-          try { return audioBufferToMp3(audioBuf); } catch{}
-        }
-        return audioBuf ? pcmToWavBlob(audioBuf) : new Blob([array], {type:'audio/wav'});
-      }
-    } else {
-      if (audioBuf) {
-        try { return audioBufferToMp3(audioBuf); } catch(e){
-          console.warn('lamejs mp3 nie zadziałał, fallback do WAV', e);
-        }
-      }
-      if (audioBuf) return pcmToWavBlob(audioBuf);
+  if(fmt === 'mp3' || fmt === 'm4a'){
+    try{
+      return await ffmpegConvert(file, fmt);
+    }catch(e){
+      toast(`Konwersja do ${fmt} nie powiodła się, użyto WAV jako fallback`, 'warn');
+      if(audioBuf) return pcmToWavBlob(audioBuf);
       return new Blob([array], {type:'audio/wav'});
     }
   }
 
-  if (fmt === 'm4a') {
-    if (useFFmpeg && ffmpeg) {
-      try { return await ffmpegConvert(file, 'm4a'); } catch(e){
-        console.warn('ffmpeg m4a zawiódł, fallback do WAV', e);
-      }
-    }
-    if (audioBuf) return pcmToWavBlob(audioBuf);
-    return new Blob([array], {type:'audio/wav'});
-  }
-
-  if (!audioBuf){
+  if(!audioBuf){
     return await synthToneTo(fmt);
   }
   if(fmt === 'wav') return pcmToWavBlob(audioBuf);
@@ -1011,7 +1075,7 @@ function pcmToWavBlob(audioBuffer){
   return new Blob([view], {type:'audio/wav'});
 }
 
-/* Document, video, archive, code and utilities (unchanged) */
+/* Document */
 async function convertDocument(file, fmt){
   const text = await tryReadText(file);
   if(fmt==='txt') return new Blob([text], {type:'text/plain'});
@@ -1043,8 +1107,9 @@ async function tryReadText(file){
   }
 }
 
+/* Video (lite) */
 async function convertVideo(file, fmt){
-  if ((fmt === 'mp4' || fmt === 'mov') && useFFmpeg && ffmpeg) {
+  if(fmt === 'mp4' || fmt === 'mov'){
     try{
       return await ffmpegConvert(file, fmt);
     }catch(e){
@@ -1095,6 +1160,7 @@ async function convertVideo(file, fmt){
   return new Blob([await first.arrayBuffer()], {type:'video/webm'});
 }
 
+/* Archive (lite) */
 async function convertArchive(file, fmt){
   if(fmt!=='zip-lite'){
     return new Blob([await file.arrayBuffer()], {type:'application/octet-stream'});
@@ -1104,6 +1170,7 @@ async function convertArchive(file, fmt){
   return new Blob([header, content], {type:'application/zip'});
 }
 
+/* Code */
 async function convertCode(file, fmt){
   const text = await tryReadText(file);
   if(fmt==='json'){
@@ -1122,7 +1189,7 @@ async function convertCode(file, fmt){
   return new Blob([text], {type:'text/plain'});
 }
 
-/* Utility functions reused earlier: truncate, once, synthFrames, concatBlobs, generatePlaceholderCanvas, generateMiniPDF, suggestExt, clamp */
+/* Utilities */
 function truncate(str, n){
   if(str.length <= n) return str;
   const ext = (str.includes('.') ? '.'+str.split('.').pop() : '');
