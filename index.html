@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Modern Forge File Converter</title>
 <style>
   :root{
@@ -58,7 +58,6 @@
     grid-template-rows: auto 1fr auto;
   }
 
-  /* Top Nav */
   .nav{
     position: sticky; top:0; z-index:10;
     display:flex; align-items:center; gap:14px;
@@ -97,46 +96,13 @@
   .container{
     display:grid;
     place-items:center;
-    padding: clamp(16px, 3vw, 40px);
-  }
-
-  /* Ads layout */
-  .layout{
-    width: min(1220px, 100%);
-    display: grid;
-    gap: 16px;
-    grid-template-columns: 1fr min(1040px, 100%) 1fr;
-    align-items: start;
-  }
-  .ad{
-    position: sticky;
-    top: 86px;
-    height: 420px;
-    border-radius: var(--radius-lg);
-    border: 1px dashed hsl(0 0% 100% / .20);
-    background: linear-gradient(180deg, hsl(var(--glass)/.10), hsl(var(--glass-2)/.06));
-    backdrop-filter: blur(var(--blur)) saturate(140%);
-    -webkit-backdrop-filter: blur(var(--blur)) saturate(140%);
-    box-shadow: 0 10px 30px hsl(var(--shadow));
-    display:grid; place-items:center;
-    color: hsl(0 0% 95%);
-  }
-  .ad small{ opacity:.85 }
-  @media (max-width: 980px){
-    .layout{
-      grid-template-columns: 1fr;
-    }
-    .ad{
-      position: relative;
-      top: auto;
-      height: 110px;
-    }
-    .ad.bottom{ height: 120px }
+    padding: clamp(12px, 2.8vw, 40px);
   }
 
   .app{
+    width: min(1040px, 100%);
     display:grid;
-    gap:20px;
+    gap:22px;
   }
   .hero{
     display:grid;
@@ -147,7 +113,7 @@
     margin:0;
     font-weight:800;
     letter-spacing:.2px;
-    font-size: clamp(28px, 4.5vw, 44px);
+    font-size: clamp(26px, 5.5vw, 44px);
     background: linear-gradient(90deg, hsl(var(--glass)/.96), hsl(var(--accent)/.9), hsl(var(--accent-2)/.9));
     -webkit-background-clip:text;
     background-clip:text;
@@ -159,13 +125,14 @@
     max-width: 68ch;
     color: hsl(0 0% 90%);
     opacity:.9;
+    padding: 0 8px;
   }
 
   .panel{
     position: relative;
     display:grid;
     gap: 14px;
-    padding: clamp(14px, 2.4vw, 28px);
+    padding: clamp(14px, 2.8vw, 28px);
     background: linear-gradient(180deg, hsl(var(--glass)/.16), hsl(var(--glass-2)/.08));
     border-radius: var(--radius-lg);
     border: 1px solid hsl(0 0% 100% / .08);
@@ -199,7 +166,7 @@
     border: 1px dashed hsl(0 0% 100% / .25);
     border-radius: var(--radius);
     padding: clamp(14px, 2.2vw, 24px);
-    min-height: 220px;
+    min-height: 200px;
     display:grid;
     place-items:center;
     gap:12px;
@@ -228,11 +195,10 @@
     opacity:0;
     cursor:pointer;
   }
-
   .btn{
     display:inline-grid; place-items:center;
     padding: 12px 16px;
-    border-radius: 14px;
+    border-radius: 12px;
     border: 1px solid hsl(0 0% 100% / .2);
     color: white;
     background: linear-gradient(180deg, hsl(var(--accent)/.9), hsl(var(--accent)/.75));
@@ -246,18 +212,27 @@
     background: linear-gradient(180deg, hsl(0 0% 100% / .09), hsl(0 0% 100% / .04));
     color: hsl(0 0% 98%);
   }
-  .btn.primary-lg{
-    padding: 16px 26px;
-    font-size: 18px;
-    border-radius: 16px;
-    box-shadow: 0 10px 26px hsl(var(--accent)/.30), inset 0 1px 0 hsl(0 0% 100% / .28);
-  }
-
   .row{
     display:flex; gap:10px; flex-wrap: wrap; align-items:center;
   }
   .spacer{flex:1}
-
+  .select, .number, .checkbox{
+    display:grid; gap:6px;
+  }
+  label{
+    font-size: 12px; letter-spacing:.2px; opacity:.9
+  }
+  select, input[type="number"]{
+    width:100%;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid hsl(0 0% 100% / .15);
+    background: linear-gradient(180deg, hsl(0 0% 100% / .11), hsl(0 0% 100% / .05));
+    color: white;
+    outline:none;
+    backdrop-filter: blur(6px);
+  }
+  option{ color: black }
   .limits{
     display:flex; gap:8px; align-items:center; flex-wrap:wrap;
     font-size:12px; opacity:.9
@@ -302,6 +277,9 @@
   }
   .file .meta b{ font-size:14px }
   .file .meta small{ opacity:.85 }
+  .file .act{
+    display:flex; gap:8px; align-items:center;
+  }
   .status{
     font-size:12px; padding:6px 8px; border-radius:999px;
     border: 1px solid hsl(0 0% 100% / .18);
@@ -310,8 +288,11 @@
   .warn{ background: hsl(var(--warn)/.15); border-color: hsl(var(--warn)/.35) }
   .err{ background: hsl(var(--err)/.15); border-color: hsl(var(--err)/.35) }
   .ghost{ opacity:.65 }
+  footer{
+    display:flex; justify-content:center; gap:10px; flex-wrap:wrap;
+    opacity:.9; font-size:12px; padding: 6px 0 24px;
+  }
 
-  /* Pages */
   .page{ display:none; }
   .page.active{ display:block; }
   .content-grid{
@@ -325,63 +306,24 @@
   @media (max-width: 560px){ .kpi{grid-template-columns: 1fr 1fr} }
   .kpi .panel{ text-align:center; padding:18px }
 
-  /* Pages flow spacing */
-  .panel + .panel{ margin-top: 8px }
-  .block-gap{ display:grid; gap: 20px }
+  .format-wrap .subtle,
+  #categoryGrid,
+  #formatBadges{ display:none !important; }
 
-  /* Export badges only (no manual format picking by user) */
-  .export-wrap{
-    display:grid; gap:12px;
-  }
-  .export-badges{
-    display:flex; flex-wrap:wrap; gap:10px;
-  }
-  .badge{
-    padding:10px 12px; border-radius:12px;
-    border:1px solid hsl(0 0% 100%/.15);
-    background: linear-gradient(180deg, hsl(0 0% 100%/.10), hsl(0 0% 100%/.06));
-    cursor:pointer; user-select:none;
-    transition:.15s transform, .15s background, .15s border-color;
-  }
-  .badge.active{
-    background: linear-gradient(180deg, hsl(var(--accent)/.9), hsl(var(--accent)/.75));
-    border-color: transparent;
-  }
-  .subtle{ opacity:.85; font-size:12px }
-
-  /* Steps pages */
-  .steps{
-    display:none;
-  }
-  .steps.active{ display:block; }
-  .topbar{
-    position: sticky; top: 56px; z-index: 9;
-    display:flex; align-items:center; gap:10px;
-    padding: 10px 14px;
-    border-radius: 14px;
-    border: 1px solid hsl(0 0% 100% / .10);
-    background: linear-gradient(180deg, hsl(0 0% 100%/.08), hsl(0 0% 100%/.05));
-    backdrop-filter: blur(14px) saturate(140%);
-    -webkit-backdrop-filter: blur(14px) saturate(140%);
-    box-shadow: 0 6px 22px hsl(var(--shadow));
-  }
-  .topbar .crumb{
-    display:inline-flex; gap:8px; align-items:center;
-    padding:8px 12px; border-radius:999px;
-    border: 1px solid hsl(0 0% 100% / .15);
-    background: linear-gradient(180deg, hsl(0 0% 100%/.12), hsl(0 0% 100%/.06));
-  }
-  .topbar .crumb.active{
-    background: linear-gradient(180deg, hsl(var(--accent)/.85), hsl(var(--accent)/.7));
-    border-color: transparent;
-  }
-  .convert-cta{
-    display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap;
+  #home-grid{ display:grid; gap:24px; }
+  @media (max-width:640px){
+    .row{ gap:8px }
+    .btn{ padding:12px 14px }
+    select, input[type="number"]{ font-size:16px }
   }
 
-  /* Visible spacing between sections */
-  .section-gap{ margin-top: 18px }
-
+  #page-progress .progress-wrap{
+    display:grid; gap:14px;
+  }
+  .big-title{
+    font-weight:800; font-size: clamp(20px, 4.6vw, 28px);
+  }
+  .btn-row{ display:flex; gap:10px; flex-wrap:wrap; }
 </style>
 
 <script type="importmap">
@@ -407,117 +349,175 @@
 </header>
 
 <main class="container">
-  <div class="layout">
-    <aside class="ad ad-left" aria-label="Sponsored">
-      <div>
-        <div class="logo" style="margin:0 auto 8px"></div>
-        <small>Ad Space</small>
+  <div class="app">
+
+    <section class="hero">
+      <h1>Modern Forge File Converter</h1>
+      <p>Convert images, audio, documents, and videos right in your browser. Your files stay on your device and never leave your computer.</p>
+    </section>
+
+    <section class="page active" id="page-home" aria-label="Converter">
+      <div id="home-grid">
+        <section class="panel" aria-label="Upload">
+          <div class="title"><span class="dot"></span> Upload files</div>
+          <div id="drop" class="drop" tabindex="0" role="button" aria-label="Drag and drop files or tap to browse">
+            <input id="fileInput" type="file" multiple aria-label="File input">
+            <div class="big">Drag & Drop files here</div>
+            <div class="small">or</div>
+            <div class="btn">Browse files</div>
+            <div class="limits" id="limitInfo">
+              <span class="pill" title="We detect a safe limit by your device memory and performance">Auto device-safe limit</span>
+              <span class="pill">500 MB</span>
+              <span class="pill">1 GB</span>
+              <span class="pill">Client-side processing</span>
+            </div>
+          </div>
+          <div class="file-list" id="fileList" aria-live="polite"></div>
+        </section>
+
+        <section class="panel" aria-label="Settings">
+          <div class="title"><span class="dot"></span> Settings</div>
+          <div class="format-wrap">
+            <div class="row">
+              <div class="number" style="min-width:220px">
+                <label for="outFormat">Output format</label>
+                <select id="outFormat" aria-label="Output format"></select>
+              </div>
+              <div class="number" style="min-width:220px">
+                <label for="maxSize">Max total size</label>
+                <select id="maxSize">
+                  <option value="auto">Auto (device-safe)</option>
+                  <option value="500">500 MB</option>
+                  <option value="1000">1 GB</option>
+                </select>
+              </div>
+              <div class="number" style="min-width:220px">
+                <label for="parallel">Parallel conversions</label>
+                <input id="parallel" type="number" min="1" max="6" value="2" inputmode="numeric">
+              </div>
+              <div class="spacer"></div>
+              <button id="convertBtn" class="btn" aria-label="Start conversion">Convert</button>
+              <button id="clearBtn" class="btn secondary" aria-label="Clear list">Clear</button>
+            </div>
+
+            <div class="row">
+              <div class="prog" style="flex:1"><i id="progressBar" style="width:0%"></i></div>
+              <span id="progressText" style="min-width:110px; text-align:right">0%</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" aria-label="Output">
+          <div class="title"><span class="dot"></span> Results</div>
+          <div class="file-list" id="resultList"></div>
+        </section>
       </div>
-    </aside>
+    </section>
 
-    <div class="app">
-      <section class="hero">
-        <h1>Modern Forge File Converter</h1>
-        <p>Convert files right in your browser with a Liquid Glass UI. Detection is automatic, and exports are a click away.</p>
-      </section>
-
-      <!-- Upload -->
-      <section class="panel" aria-label="Upload">
-        <div class="title"><span class="dot"></span> Upload files</div>
-        <div id="drop" class="drop section-gap" tabindex="0" role="button" aria-label="Drag and drop files or click to browse">
-          <input id="fileInput" type="file" multiple aria-label="File input">
-          <div class="big">Drag & Drop files here</div>
-          <div class="small">or</div>
-          <div class="btn">Browse files</div>
-          <div class="limits" id="limitInfo" style="margin-top:6px">
-            <span class="pill" title="We detect a safe limit by your device memory and performance">Auto device-safe limit</span>
-            <span class="pill">Client-side processing</span>
-          </div>
-        </div>
-        <div class="file-list" id="fileList" aria-live="polite"></div>
-      </section>
-
-      <!-- Export options (auto-detected), Convert -->
-      <section class="panel" aria-label="Export">
-        <div class="title"><span class="dot"></span> Export options</div>
-
-        <div class="export-wrap section-gap">
-          <div class="subtle">Detected type: <b id="detectedType">—</b></div>
-          <div class="export-badges" id="exportBadges"></div>
-
-          <div class="convert-cta">
-            <button id="convertBtn" class="btn primary-lg" aria-label="Start conversion">Convert & Continue</button>
-            <button id="clearBtn" class="btn secondary" aria-label="Clear list">Clear</button>
-          </div>
-
+    <section class="page" id="page-progress" aria-label="Converting">
+      <section class="panel">
+        <div class="title"><span class="dot"></span> Converting</div>
+        <div class="progress-wrap">
+          <div class="big-title" id="progressTitle">Working on your files…</div>
           <div class="row">
-            <div class="prog" style="flex:1"><i id="progressBar" style="width:0%"></i></div>
-            <span id="progressText" style="min-width:110px; text-align:right">0%</span>
+            <div class="prog" style="flex:1"><i id="progressBar2" style="width:0%"></i></div>
+            <span id="progressText2" style="min-width:110px; text-align:right">0%</span>
+          </div>
+          <div class="btn-row">
+            <a id="downloadAll" class="btn" download>Download</a>
+            <button id="convertMore" class="btn secondary">Convert more</button>
+          </div>
+          <div class="ghost" id="progressHint">Please keep this tab open while we convert your files locally.</div>
+        </div>
+      </section>
+    </section>
+
+    <section class="page" id="page-about" aria-label="About">
+      <div class="content-grid">
+        <div class="panel">
+          <div class="title"><span class="dot"></span> About Modern Forge</div>
+          <p>Modern Forge is a privacy-first, on-device file converter. It runs entirely in your browser, using built-in web APIs to transform files without uploading them to any server.</p>
+          <p>We focus on safety, speed, and beautiful UX. The app adapts to your device to keep memory usage safe and efficient.</p>
+          <div class="kpi">
+            <div class="panel">
+              <div class="big" style="font-weight:800; font-size:22px">100% Local</div>
+              <div class="subtle">No uploads</div>
+            </div>
+            <div class="panel">
+              <div class="big" style="font-weight:800; font-size:22px">Adaptive</div>
+              <div class="subtle">Device-safe limits</div>
+            </div>
+            <div class="panel">
+              <div class="big" style="font-weight:800; font-size:22px">Open</div>
+              <div class="subtle">Standards-first web APIs</div>
+            </div>
           </div>
         </div>
-      </section>
-
-      <!-- Results -->
-      <section class="panel" aria-label="Results">
-        <div class="title"><span class="dot"></span> Results</div>
-        <div class="file-list section-gap" id="resultList"></div>
-      </section>
-
-      <!-- Conversion Flow Page -->
-      <section id="flow" class="steps">
-        <div class="topbar" role="navigation" aria-label="Flow Navigation">
-          <button class="crumb" data-step="upload">Upload</button>
-          <button class="crumb" data-step="export">Export</button>
-          <button class="crumb active" data-step="convert">Convert</button>
-          <button class="crumb" data-step="download">Download</button>
-          <span class="spacer"></span>
-          <a class="chip" data-route="home">Back to Converter</a>
+        <div class="panel">
+          <div class="title"><span class="dot"></span> Philosophy</div>
+          <p>We believe powerful tools can be simple, private, and accessible. Modern browsers provide the building blocks for media processing, and with thoughtful design, they can feel like native apps.</p>
+          <p>While some conversions are “lite” placeholders due to web limitations, they keep your data local and provide broadly compatible results.</p>
         </div>
-
-        <div class="panel section-gap" id="flowContent">
-          <div class="title"><span class="dot"></span> Converting…</div>
-          <p id="flowMessage">Preparing your files. This will take about 10 seconds.</p>
-          <div class="row section-gap">
-            <div class="prog" style="flex:1"><i id="flowBar" style="width:0%"></i></div>
-            <span id="flowPct" style="min-width:110px; text-align:right">0%</span>
-          </div>
-        </div>
-      </section>
-
-      <footer>
-        <span>Runs fully on-device • No uploads</span>
-        <span>Optimized for desktop, tablet, and mobile</span>
-      </footer>
-    </div>
-
-    <aside class="ad ad-right" aria-label="Sponsored">
-      <div>
-        <div class="logo" style="margin:0 auto 8px"></div>
-        <small>Ad Space</small>
       </div>
-    </aside>
+    </section>
 
-    <!-- Mobile top ad -->
-    <aside class="ad top" aria-label="Sponsored" style="display:none"></aside>
-    <!-- Mobile bottom ad -->
-    <aside class="ad bottom" aria-label="Sponsored" style="display:none"></aside>
+    <section class="page" id="page-security" aria-label="Security">
+      <div class="content-grid">
+        <div class="panel">
+          <div class="title"><span class="dot"></span> Security & Privacy</div>
+          <ul>
+            <li>Files never leave your device. All processing is done in the browser.</li>
+            <li>No account, no tracking, no analytics beacons.</li>
+            <li>Device-safe memory heuristics keep your system responsive.</li>
+            <li>Permissions are not required; features use sandboxed browser capabilities.</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <div class="title"><span class="dot"></span> Tips</div>
+          <ul>
+            <li>Prefer modern formats (WebP/AVIF for images, WebM for video) for smaller sizes.</li>
+            <li>Increase “Parallel conversions” on desktops for faster batch processing.</li>
+            <li>Reduce maximum size if you experience slowdowns on low-memory devices.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="page-help" aria-label="Help">
+      <div class="panel">
+        <div class="title"><span class="dot"></span> Quick Start</div>
+        <ol>
+          <li>Drag & drop files into the upload area.</li>
+          <li>Choose the output format (the right one is auto-detected from your files).</li>
+          <li>Click Convert to open the progress view. Download when done.</li>
+        </ol>
+      </div>
+      <div class="panel">
+        <div class="title"><span class="dot"></span> FAQ</div>
+        <p><b>Why “lite” formats?</b> Some encoders are not natively available in browsers. We provide lightweight, standards-friendly placeholders that are broadly compatible.</p>
+        <p><b>Are my files safe?</b> Yes. Everything is processed locally and never uploaded.</p>
+      </div>
+    </section>
+
+    <footer>
+      <span>Runs fully on-device • No uploads</span>
+      <span>Optimized for desktop, tablet, and mobile</span>
+    </footer>
   </div>
 </main>
 
 <script type="module">
-/**
- * Modern Forge File Converter — Auto-detect, export badges only, 2-step flow
- * - Removes manual options and max size select; limit is always auto.
- * - Convert button opens flow page with working nav; conversion delayed 10s.
- * - Attractive export badges based on detected file type(s).
- * - Ads: desktop left/right; mobile top/bottom.
- */
-
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 
-/* Router for header pages */
-const routes = ['home','about','security','help'];
+/* Router */
+const routes = ['home','progress','about','security','help'];
+const chips = $$('.chip[data-route]');
+chips.forEach(ch => ch.addEventListener('click', e=>{
+  e.preventDefault();
+  const r = ch.getAttribute('data-route');
+  navigate(r);
+}));
 function navigate(route){
   routes.forEach(r=>{
     const page = $('#page-'+r);
@@ -529,65 +529,34 @@ function navigate(route){
       else{ chip.classList.remove('active'); chip.removeAttribute('aria-current'); }
     }
   });
-  history.replaceState({}, '', '#'+route);
-}
-const chips = $$('.chip[data-route]');
-chips.forEach(ch => ch.addEventListener('click', e=>{
-  e.preventDefault(); navigate(ch.getAttribute('data-route'));
-}));
-window.addEventListener('popstate', ()=> navigate((location.hash||'#home').slice(1)));
-/* Minimal pages preserved for router */
-ensurePages();
-navigate((location.hash||'#home').slice(1));
-
-function ensurePages(){
-  // Create minimal placeholders to satisfy router while main UI is standalone
-  ['about','security','help'].forEach(id=>{
-    if(!$('#page-'+id)){
-      const sec = document.createElement('section');
-      sec.id = 'page-'+id; sec.className = 'page'; sec.innerHTML =
-        `<div class="panel"><div class="title"><span class="dot"></span> ${id[0].toUpperCase()+id.slice(1)}</div>
-          <p class="ghost">This is a placeholder page for ${id}.</p></div>`;
-      document.querySelector('.app').appendChild(sec);
-    }
-  });
-  if(!$('#page-home')){
-    const home = document.createElement('section');
-    home.id='page-home'; home.className='page active';
-    document.querySelector('.app').prepend(home);
-  } else {
-    $('#page-home').classList.add('active');
+  if(route==='home' || route==='about' || route==='security' || route==='help'){
+    history.replaceState({}, '', '#'+route);
   }
 }
+window.addEventListener('popstate', ()=> navigate((location.hash||'#home').slice(1)));
+navigate((location.hash||'#home').slice(1));
 
 /* Elements */
 const dropEl = $('#drop');
 const fileInput = $('#fileInput');
 const fileListEl = $('#fileList');
 const resultListEl = $('#resultList');
+const maxSizeEl = $('#maxSize');
+const parallelEl = $('#parallel');
 const progressBar = $('#progressBar');
 const progressText = $('#progressText');
 const convertBtn = $('#convertBtn');
 const clearBtn = $('#clearBtn');
-const limitInfo = $('#limitInfo');
-const exportBadges = $('#exportBadges');
-const detectedTypeEl = $('#detectedType');
+const outFormatEl = $('#outFormat');
 
-const flowPage = $('#flow');
-const flowBar = $('#flowBar');
-const flowPct = $('#flowPct');
-const flowMessage = $('#flowMessage');
-const flowCrumbs = $$('.crumb');
+const progressBar2 = $('#progressBar2');
+const progressText2 = $('#progressText2');
+const downloadAllBtn = $('#downloadAll');
+const convertMoreBtn = $('#convertMore');
 
 const KB = 1024, MB = 1024*KB, GB = 1024*MB;
 
-/* State */
-let files = [];
-let results = [];
-let selectedFormat = '';
-let selectedCategory = 'image';
-
-/* Category/format catalogs */
+/* Formats per auto-detected category */
 const formatsByCategory = {
   image: ['png','jpeg','webp','avif','png-8','jpeg-low'],
   audio: ['wav','ogg'],
@@ -601,33 +570,48 @@ const extToCategory = {
   wav:'audio', mp3:'audio', ogg:'audio', m4a:'audio', flac:'audio',
   txt:'document', md:'document', html:'document', pdf:'document',
   json:'code', csv:'code', js:'code',
-  mp4:'video', webm:'video', mov:'video', mkv:'video', avi:'video'
+  mp4:'video', webm:'video', mov:'video', mkv:'video', avi:'video', hevc:'video'
 };
 
-/* Ads responsive positions (desktop sides, mobile top/bottom) */
-function refreshAds(){
-  const isMobile = matchMedia('(max-width: 980px)').matches;
-  const left = $('.ad-left'), right = $('.ad-right');
-  const top = document.querySelector('.ad.top');
-  const bottom = document.querySelector('.ad.bottom');
-  if(isMobile){
-    left.style.display = 'none';
-    right.style.display = 'none';
-    top.style.display = 'grid';
-    bottom.style.display = 'grid';
-    if(!top.innerHTML.trim()) top.innerHTML = '<div><div class="logo" style="margin:0 auto 8px"></div><small>Ad Space</small></div>';
-    if(!bottom.innerHTML.trim()) bottom.innerHTML = '<div><div class="logo" style="margin:0 auto 8px"></div><small>Ad Space</small></div>';
+/* State */
+let files = [];
+let results = [];
+let selectedFormat = '';
+
+/* Auto category detection */
+function autoCategoryForFiles(fs){
+  if(!fs.length) return 'image';
+  const count = {image:0,audio:0,document:0,video:0,archive:0,code:0};
+  for(const f of fs){
+    const ext = (f.name.split('.').pop() || '').toLowerCase();
+    const cat = extToCategory[ext] || 'document';
+    if(count[cat]!==undefined) count[cat]++;
+  }
+  let best = 'image', max = -1;
+  for(const k of Object.keys(count)){ if(count[k] > max){ max = count[k]; best = k; } }
+  return best;
+}
+
+/* Populate output formats based on auto category */
+function refreshOutputFormats(){
+  const cat = autoCategoryForFiles(files);
+  const list = formatsByCategory[cat] || [];
+  outFormatEl.innerHTML = '';
+  for(const fmt of list){
+    const opt = document.createElement('option');
+    opt.value = fmt;
+    opt.textContent = fmt.toUpperCase();
+    outFormatEl.appendChild(opt);
+  }
+  if(list.length){
+    if(!list.includes(selectedFormat)) selectedFormat = list[0];
+    outFormatEl.value = selectedFormat;
   }else{
-    left.style.display = 'grid';
-    right.style.display = 'grid';
-    if(top){ top.style.display = 'none'; }
-    if(bottom){ bottom.style.display = 'none'; }
+    selectedFormat = '';
   }
 }
-addEventListener('resize', refreshAds);
-refreshAds();
 
-/* Auto device-safe limit */
+/* Device-safe size estimation */
 function estimateSafeLimitBytes(){
   const mem = navigator.deviceMemory || 4;
   const cores = (navigator.hardwareConcurrency || 4);
@@ -646,76 +630,29 @@ function humanSize(bytes){
   if(bytes >= KBb) return (bytes/KBb).toFixed(1)+' KB';
   return bytes+' B';
 }
-const autoLimitBytes = estimateSafeLimitBytes();
-if(limitInfo){
-  const auto = limitInfo.querySelector('.pill');
-  if(auto) auto.textContent = `Auto device-safe limit: ${humanSize(autoLimitBytes)}`;
-}
-
-/* Detection */
-function detectCategoryForFiles(fs){
-  const count = {image:0,audio:0,document:0,video:0,archive:0,code:0};
-  for(const f of fs){
-    const ext = (f.name.split('.').pop() || '').toLowerCase();
-    const cat = extToCategory[ext] || guessByMime(f.type) || 'document';
-    if(count[cat]!==undefined) count[cat]++;
-  }
-  let best = 'image', max = -1;
-  for(const k of Object.keys(count)){ if(count[k] > max){ max = count[k]; best = k; } }
-  return best;
-}
-function guessByMime(m){
-  if(!m) return '';
-  if(m.startsWith('image/')) return 'image';
-  if(m.startsWith('audio/')) return 'audio';
-  if(m.startsWith('video/')) return 'video';
-  if(m.includes('json') || m.includes('javascript')) return 'code';
-  if(m.includes('zip')) return 'archive';
-  return 'document';
-}
-
-/* Export badges builder */
-function buildExportBadges(){
-  const cat = files.length ? detectCategoryForFiles(files) : 'image';
-  selectedCategory = cat;
-  detectedTypeEl.textContent = cat[0].toUpperCase()+cat.slice(1);
-  const fmts = formatsByCategory[cat] || [];
-  exportBadges.innerHTML = '';
-  if(!fmts.length){
-    exportBadges.innerHTML = '<div class="ghost">No export options for this type.</div>';
-    selectedFormat = '';
-    return;
-  }
-  if(!fmts.includes(selectedFormat)) selectedFormat = fmts[0];
-  fmts.forEach(fmt=>{
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'badge' + (fmt===selectedFormat ? ' active':'');
-    b.textContent = fmt.toUpperCase();
-    b.setAttribute('data-fmt', fmt);
-    b.addEventListener('click', ()=>{
-      selectedFormat = fmt;
-      $$('.badge').forEach(x=>x.classList.toggle('active', x.getAttribute('data-fmt')===selectedFormat));
-    });
-    exportBadges.appendChild(b);
-  });
+function getSelectedLimitBytes(){
+  const v = maxSizeEl.value;
+  if(v === '500') return 500*MB;
+  if(v === '1000') return 1000*MB;
+  return estimateSafeLimitBytes();
 }
 
 /* File list rendering */
 function addFiles(newFiles){
+  const limitBytes = getSelectedLimitBytes();
   const currentTotal = files.reduce((a,f)=>a+f.size,0);
   let addedTotal = 0;
   for(const f of newFiles){
     if(files.some(x => x.name===f.name && x.size===f.size)) continue;
-    if(currentTotal + addedTotal + f.size > autoLimitBytes){
-      toast(`Skipping ${f.name} (over safe limit)`, 'warn');
+    if(currentTotal + addedTotal + f.size > limitBytes){
+      toast(`Skipping ${f.name} (exceeds limit)`, 'warn');
       continue;
     }
     files.push(f);
     addedTotal += f.size;
   }
   renderFileList();
-  buildExportBadges();
+  refreshOutputFormats();
 }
 function renderFileList(){
   fileListEl.innerHTML = '';
@@ -744,7 +681,7 @@ function renderFileList(){
       const idx = +btn.getAttribute('data-remove');
       files.splice(idx,1);
       renderFileList();
-      buildExportBadges();
+      refreshOutputFormats();
     });
   });
 }
@@ -801,117 +738,202 @@ dropEl.addEventListener('drop', e=>{
 fileInput.addEventListener('change', ()=>{
   if(fileInput.files) addFiles(fileInput.files);
 });
-dropEl.addEventListener('keydown', e=>{
-  if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); fileInput.click(); }
+
+/* Limit change */
+maxSizeEl.addEventListener('change', ()=>{
+  const limitBytes = getSelectedLimitBytes();
+  let total = 0;
+  const kept = [];
+  for(const f of files){
+    if(total + f.size <= limitBytes){ kept.push(f); total += f.size; }
+    else toast(`Removed ${f.name} (over new limit)`, 'warn');
+  }
+  files = kept;
+  renderFileList();
 });
 
-/* Progress */
-let doneCount = 0;
-function progress(pct, label){
-  progressBar.style.width = `${pct}%`;
-  progressText.textContent = label;
-}
-function updateOverallProgress(){
-  const pct = Math.round((doneCount / Math.max(1, files.length)) * 100);
-  progress(pct, `${pct}%`);
-}
-
-/* Convert flow with 10s delay and working nav */
+/* Convert actions with progress page + artificial 10s delay (non-linear) */
 convertBtn.addEventListener('click', async ()=>{
   if(!files.length) return toast('Add some files first', 'warn');
-  if(!selectedFormat){
-    buildExportBadges();
-    if(!selectedFormat) return toast('Pick an export option', 'warn');
-  }
-  openFlow('convert');
-  await delayedConvert(10_000); // 10s delay
-  updateCrumbs('download');
-  flowMessage.textContent = 'Conversion complete. Download your files below.';
+  selectedFormat = outFormatEl.value || '';
+  if(!selectedFormat) return toast('Choose an output format', 'warn');
+
+  const limitBytes = getSelectedLimitBytes();
+  const totalBytes = files.reduce((a,f)=>a+f.size,0);
+  if(totalBytes > limitBytes) return toast('Total size exceeds the selected limit', 'err');
+
+  navigate('progress');
+
+  setOverallProgress(0);
+  results = [];
+  updateDownloadLink([]);
+  doneCount = 0;
+
+  // Start artificial progress driver for ~10 seconds (with randomness)
+  startArtificialProgress(10_000);
+
+  const concurrency = clamp(parseInt(parallelEl.value||'2',10),1,6);
+  const tasks = files.map(f=>()=> convertFile(fileWithArtificialDelay(f), selectedFormat));
+  await runPool(tasks, concurrency);
+
+  // Mark artificial driver as completed
+  completeArtificialProgress();
+
+  setOverallProgress(100);
+  updateDownloadLink(results);
+  toast('Conversion complete', 'ok');
+  renderResults();
 });
 clearBtn.addEventListener('click', ()=>{
   files = [];
   results = [];
   renderFileList();
   renderResults();
-  progress(0,'0%');
+  setInlineProgress(0);
 });
 
-function openFlow(step){
-  $('#page-home')?.classList.remove('active');
-  flowPage.classList.add('active');
-  updateCrumbs(step);
-  flowMessage.textContent = 'Preparing your files. This will take about 10 seconds.';
-  flowBar.style.width = '0%';
-  flowPct.textContent = '0%';
-}
+/* Artificial progress control */
+let artificial = {
+  timer: null,
+  start: 0,
+  dur: 0,
+  softCap: 95,
+  done: false
+};
+function startArtificialProgress(ms){
+  if(artificial.timer) clearInterval(artificial.timer);
+  artificial.start = performance.now();
+  artificial.dur = ms;
+  artificial.done = false;
+  const step = ()=>{
+    if(artificial.done) return;
+    const t = performance.now() - artificial.start;
+    const x = Math.min(1, t / artificial.dur);
 
-function updateCrumbs(active){
-  flowCrumbs.forEach(c=> c.classList.toggle('active', c.getAttribute('data-step')===active));
-}
+    // Ease curve + randomness
+    const ease = x*x*(3-2*x); // smoothstep
+    const jitter = (Math.random() - 0.5) * 0.06; // +/- 3%
+    let pct = Math.max(0, Math.min(1, ease + jitter));
 
-/* Flow navigation works: clicking crumbs updates content and can return back */
-flowCrumbs.forEach(c=>{
-  c.addEventListener('click', ()=>{
-    const step = c.getAttribute('data-step');
-    if(step==='upload' || step==='export'){
-      // back to main converter page
-      flowPage.classList.remove('active');
-      $('#page-home')?.classList.add('active');
-      navigate('home');
-    }else if(step==='convert'){
-      flowMessage.textContent = 'Preparing your files. This will take about 10 seconds.';
-    }else if(step==='download'){
-      flowMessage.textContent = 'Conversion complete. Download your files below.';
-    }
-    updateCrumbs(step);
-  });
-});
+    // Cap progress until conversions finish
+    pct = Math.min(pct, artificial.softCap/100);
 
-/* Run delayed conversion with progress in flow bar, then real convert with overall bar */
-async function delayedConvert(ms){
-  // Simulate progress in the flow bar for ms duration, then perform conversion
-  const start = performance.now();
-  const tick = (now)=>{
-    const t = Math.min(1, (now - start) / ms);
-    const pct = Math.round(t*100);
-    flowBar.style.width = pct+'%';
-    flowPct.textContent = pct+'%';
-    if(t < 1) requestAnimationFrame(tick);
+    const perc = Math.round(pct * 100);
+    setProgressPage(perc);
+    // Inline bar reflects combined progress; keep inline in sync when not finished
+    if(doneCount < files.length) setInlineProgress(perc);
   };
-  requestAnimationFrame(tick);
-  await new Promise(r=>setTimeout(r, ms));
-  // Now perform actual conversion with light concurrency (auto)
-  const concurrency = Math.min(3, Math.max(1, (navigator.hardwareConcurrency||4) > 6 ? 4 : 2));
-  progress(0,'0%');
-  results = [];
-  renderResults();
-  doneCount = 0;
-  const tasks = files.map((f)=>()=> convertFile(f, selectedFormat).then(()=>{ doneCount++; updateOverallProgress(); }));
-  await runPool(tasks, concurrency);
-  progress(100,'100%');
-  renderResults();
+  step();
+  artificial.timer = setInterval(step, 180 + Math.random()*220);
+}
+function completeArtificialProgress(){
+  artificial.done = true;
+  if(artificial.timer){ clearInterval(artificial.timer); artificial.timer=null; }
 }
 
-/* Simple pool */
+/* Progress helpers */
+let doneCount = 0;
+function setInlineProgress(p){
+  progressBar.style.width = p+'%';
+  progressText.textContent = p+'%';
+}
+function setProgressPage(p){
+  progressBar2.style.width = p+'%';
+  progressText2.textContent = p+'%';
+}
+function setOverallProgress(p){
+  setInlineProgress(p);
+  setProgressPage(p);
+}
+function updateOverallProgress(){
+  const pct = Math.round((doneCount / Math.max(1, files.length)) * 100);
+  setInlineProgress(pct);
+  // Only let page progress jump forward if artificial driver is behind
+  const currentPagePct = parseInt(progressText2.textContent) || 0;
+  if(pct > currentPagePct) setProgressPage(Math.min(pct, 95));
+}
 async function runPool(tasks, limit){
+  doneCount = 0;
   const running = new Set();
-  let i = 0, finished = 0;
+  let i = 0;
   return new Promise(resolve=>{
     const next = ()=>{
-      if(finished === tasks.length){ resolve(); return; }
+      if(doneCount === tasks.length){ resolve(); return; }
       while(running.size < limit && i < tasks.length){
-        const p = tasks[i++]();
-        running.add(p);
-        p.finally(()=>{ running.delete(p); finished++; next(); });
+        const t = tasks[i++]();
+        running.add(t);
+        t.finally(()=>{ running.delete(t); doneCount++; updateOverallProgress(); next(); });
       }
     };
     next();
   });
 }
 
-/* Converters */
+/* Convert more / back */
+convertMoreBtn.addEventListener('click', ()=>{
+  navigate('home');
+});
+
+/* Download link: use TAR-like pack with correct extension and name */
+function updateDownloadLink(items){
+  // Derive common extension from results. If mixed, use .tar
+  let packExt = 'tar';
+  if(items.length){
+    const exts = new Set(items.map(it => (it.name.split('.').pop()||'').toLowerCase()));
+    if(exts.size === 1){
+      // Single type: no pack; offer first item directly
+      const first = items[0];
+      const url = URL.createObjectURL(first.blob);
+      downloadAllBtn.href = url;
+      downloadAllBtn.setAttribute('download', first.name);
+      downloadAllBtn.textContent = 'Download';
+      return;
+    }
+  }
+  // Multi-file pack: create simple TAR-like plaintext pack so extension is not zip
+  if(!items.length){
+    downloadAllBtn.removeAttribute('href');
+    downloadAllBtn.removeAttribute('download');
+    downloadAllBtn.textContent = 'Download';
+    return;
+  }
+  const nameBase = suggestPackBaseName(items);
+  const header = new TextEncoder().encode(`CONVERTED-PACK (${packExt.toUpperCase()}-LITE)\nItems:${items.length}\nTime:${new Date().toISOString()}\n\n`);
+  const parts = [header];
+  items.forEach((it, idx)=>{
+    const meta = new TextEncoder().encode(`--FILE ${idx+1}-- ${it.name} (${it.blob.type}) size=${it.blob.size}\n`);
+    parts.push(meta);
+    parts.push(it.blob);
+    parts.push(new TextEncoder().encode('\n--END--\n'));
+  });
+  const pack = new Blob(parts, {type:'application/octet-stream'});
+  const url = URL.createObjectURL(pack);
+  const filename = `${nameBase}.tar`;
+  downloadAllBtn.href = url;
+  downloadAllBtn.setAttribute('download', filename);
+  downloadAllBtn.textContent = 'Download .tar';
+}
+function suggestPackBaseName(items){
+  if(!items.length) return 'converted';
+  const base = commonPrefix(items.map(i=>i.name.replace(/\.[^.]+$/,''))).trim();
+  if(base && base.length >= 3) return base + '-converted';
+  return 'converted';
+}
+function commonPrefix(arr){
+  if(!arr.length) return '';
+  let p = arr[0];
+  for(let i=1;i<arr.length;i++){
+    let j=0; const s = arr[i];
+    while(j < p.length && j < s.length && p[j]===s[j]) j++;
+    p = p.slice(0,j);
+    if(!p) break;
+  }
+  return p.replace(/[-_. ]+$/,'');
+}
+
+/* Core converters */
 async function convertFile(file, fmt){
-  const cat = detectCategoryForFiles([file]);
+  const cat = (extToCategory[(file.name.split('.').pop()||'').toLowerCase()] || 'document');
   try{
     let out;
     if(cat === 'image'){
@@ -932,18 +954,16 @@ async function convertFile(file, fmt){
     const base = file.name.replace(/\.[^.]+$/,'');
     const name = `${base}.${suggestExt(fmt, file.name)}`;
     results.push({name, blob: out, type: out.type || 'application/octet-stream'});
-    renderResults();
   }catch(err){
     console.error(err);
     toast(`Failed: ${file.name}`, 'err');
   }
 }
-function suggestExt(fmt, originalName){
-  const map = { 'pdf-lite':'pdf', 'gif-lite':'gif', 'webm-lite':'webm', 'png-8':'png', 'jpeg-low':'jpg', 'rtf-lite':'rtf', 'zip-lite':'zip', 'thumb-webp':'webp' };
-  const ext = map[fmt] || fmt.toLowerCase();
-  const oext = (originalName.split('.').pop()||'').toLowerCase();
-  if(ext===oext) return ext;
-  return ext;
+
+/* Wrap original file with artificial per-file delay contribution */
+function fileWithArtificialDelay(f){
+  // Just return f; delay handled by artificial driver globally and optional micro-delays in conversions if desired
+  return f;
 }
 
 /* Image */
@@ -1194,7 +1214,7 @@ async function convertCode(file, fmt){
   return new Blob([text], {type:'text/plain'});
 }
 
-/* Helpers */
+/* Utilities */
 function truncate(str, n){
   if(str.length <= n) return str;
   const ext = (str.includes('.') ? '.'+str.split('.').pop() : '');
@@ -1256,7 +1276,7 @@ async function generatePlaceholderCanvas(w, h, mime='image/png'){
   return {blob, canvas: can};
 }
 function generateMiniPDF(text){
-  const esc = s => s.replace(/[\\()]/g, m=> '\\'+m).replace(/\r?\n/g,'\\n');
+  const esc = s => s.replace(/[\$$)]/g, m=> '\\'+m).replace(/\r?\n/g,'\\n');
   const lines = text.split(/\r?\n/).slice(0, 80);
   const content = [];
   content.push('BT /F1 12 Tf 50 780 Td 14 TL');
@@ -1292,19 +1312,30 @@ endstream endobj`);
   pdf += `trailer << /Size ${objects.length+1} /Root 1 0 R >>\nstartxref\n${xrefPos}\n%%EOF`;
   return new TextEncoder().encode(pdf);
 }
+function suggestExt(fmt, originalName){
+  const map = { 'pdf-lite':'pdf', 'gif-lite':'gif', 'webm-lite':'webm', 'png-8':'png', 'jpeg-low':'jpg', 'rtf-lite':'rtf', 'zip-lite':'zip', 'thumb-webp':'webp' };
+  const ext = map[fmt] || fmt.toLowerCase();
+  const oext = (originalName.split('.').pop()||'').toLowerCase();
+  if(ext===oext) return ext;
+  return ext;
+}
+function clamp(v,min,max){ return Math.min(max, Math.max(min, v)); }
 
 /* Init */
 function init(){
-  buildExportBadges();
-  renderFileList();
+  const autoLimit = estimateSafeLimitBytes();
+  const info = $('#limitInfo');
+  if(info){
+    const auto = info.querySelector('.pill');
+    if(auto) auto.textContent = `Auto device-safe limit: ${humanSize(autoLimit)}`;
+  }
+  dropEl.addEventListener('keydown', e=>{
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); fileInput.click(); }
+  });
+  refreshOutputFormats();
   renderResults();
 }
 init();
-
-/* Run pool helper for convert */
-function clamp(v,min,max){ return Math.min(max, Math.max(min, v)); }
-
 </script>
 </body>
-
 </html>
