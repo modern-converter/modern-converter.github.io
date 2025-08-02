@@ -276,8 +276,6 @@
                 <label for="maxSize">Maksymalny łączny rozmiar</label>
                 <select id="maxSize">
                   <option value="auto">Auto (bezpieczne dla urządzenia)</option>
-                  <option value="500">500 MB</option>
-                  <option value="1000">1 GB</option>
                 </select>
               </div>
               <div class="number" style="min-width:220px">
@@ -598,9 +596,9 @@ function estimateSafeLimitBytes(){
   const cores = (navigator.hardwareConcurrency || 4);
   const ua = navigator.userAgent.toLowerCase();
   const isMobile = /iphone|ipad|android|mobile/.test(ua);
-  let base = Math.min(mem * 0.5, 10) * GB;
-  if(isMobile) base *= 0.35;
-  if(cores <= 2) base *= 1;
+  let base = Math.min(mem * 0.8, 20) * GB;
+  if(isMobile) base *= 0.6;
+  if(cores <= 2) base *= 1.1;
   base = Math.max(200*MB, Math.min(base, 10*GB));
   return Math.round(base);
 }
@@ -1321,3 +1319,4 @@ init();
 </script>
 </body>
 </html>
+
