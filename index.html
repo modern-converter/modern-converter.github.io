@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="pl">
 <head>
 <meta charset="utf-8" />
@@ -256,6 +256,8 @@
             <div class="btn">Przeglądaj pliki</div>
             <div class="limits" id="limitInfo">
               <span class="pill" title="Limit dobierany automatycznie do pamięci i wydajności urządzenia">Automatyczny limit urządzenia</span>
+              <span class="pill">500 MB</span>
+              <span class="pill">1 GB</span>
               <span class="pill">Przetwarzanie po stronie klienta</span>
             </div>
           </div>
@@ -392,12 +394,45 @@
 </main>
 
 <script type="module">
-// FFmpeg wasm import i inicjalizacja
-import { createFFmpeg, fetchFile } from 'https://unpkg.com/@ffmpeg/ffmpeg@0.11.5/dist/ffmpeg.min.js';
-const ffmpeg = createFFmpeg({ log: false });
-const ffmpegReadyPromise = ffmpeg.load().catch(e => {
-  console.warn('FFmpeg nie załadował się:', e);
-});
+// --- FFmpeg wasm ładowanie (UMD build) i inicjalizacja ---
+let ffmpeg;
+let fetchFileFunc = () => { throw new Error('ffmpeg jeszcze się nie załadował'); };
+let ffmpegLoaderPromise;
+
+function loadFFmpegLibrary() {
+  if (window.FFmpeg && window.FFmpeg.createFFmpeg && window.FFmpeg.fetchFile) {
+    return Promise.resolve();
+  }
+  if (ffmpegLoaderPromise) return ffmpegLoaderPromise;
+  ffmpegLoaderPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/@ffmpeg/ffmpeg@0.11.5/dist/ffmpeg.min.js';
+    script.crossOrigin = 'anonymous';
+    script.onload = () => {
+      if (window.FFmpeg && window.FFmpeg.createFFmpeg && window.FFmpeg.fetchFile) {
+        resolve();
+      } else {
+        reject(new Error('Nie znaleziono oczekiwanych globali FFmpeg po załadowaniu skryptu'));
+      }
+    };
+    script.onerror = () => reject(new Error('Nie udało się załadować skryptu FFmpeg'));
+    document.head.appendChild(script);
+  });
+  return ffmpegLoaderPromise;
+}
+
+const ffmpegReadyPromise = (async () => {
+  try {
+    await loadFFmpegLibrary();
+    const { createFFmpeg, fetchFile } = FFmpeg;
+    fetchFileFunc = fetchFile;
+    ffmpeg = createFFmpeg({ log: false });
+    await ffmpeg.load();
+  } catch (e) {
+    console.warn('FFmpeg nie załadował się:', e);
+    throw e;
+  }
+})();
 
 // Pomocnicza funkcja do konwersji przez ffmpeg.wasm
 async function ffmpegConvert(file, outputFmt){
@@ -412,7 +447,7 @@ async function ffmpegConvert(file, outputFmt){
     else if(outputFmt === 'mov') outName = 'output.mov';
     else outName = `output.${outputFmt}`;
 
-    ffmpeg.FS('writeFile', inName, await fetchFile(file));
+    ffmpeg.FS('writeFile', inName, await fetchFileFunc(file));
 
     const args = [];
     if(outputFmt === 'mp3'){
@@ -429,6 +464,7 @@ async function ffmpegConvert(file, outputFmt){
 
     await ffmpeg.run(...args);
     const data = ffmpeg.FS('readFile', outName);
+    // sprzątanie
     try{ ffmpeg.FS('unlink', inName); }catch{}
     try{ ffmpeg.FS('unlink', outName); }catch{}
 
@@ -516,7 +552,7 @@ const formatsByCategory = {
 };
 const extToCategory = {
   png:'image', jpg:'image', jpeg:'image', webp:'image', avif:'image', bmp:'image', gif:'image', svg:'image', heic:'image',
-  wav:'audio', mp3:'audio', m4a:'audio', ogg:'audio', flac:'audio',
+  wav:'audio', mp3:'audio', m4a:'audio', ogg:'audio', m4a:'audio', flac:'audio',
   txt:'document', md:'document', html:'document', pdf:'document',
   json:'code', csv:'code', js:'code',
   mp4:'video', webm:'video', mov:'video', mkv:'video', avi:'video', hevc:'video'
@@ -587,15 +623,16 @@ function seoLabel(fmt){
   return map[fmt] || fmt.toUpperCase();
 }
 
-/* Device-safe size estimation – bardziej hojne */
+/* Device-safe size estimation */
 function estimateSafeLimitBytes(){
   const mem = navigator.deviceMemory || 4;
+  const cores = (navigator.hardwareConcurrency || 4);
   const ua = navigator.userAgent.toLowerCase();
   const isMobile = /iphone|ipad|android|mobile/.test(ua);
-  // 90% RAMu, lekka redukcja na mobile (70%), tylko dolny limit 200MB
-  let base = mem * 0.9 * GB;
-  if(isMobile) base *= 0.7;
-  base = Math.max(200*MB, base);
+  let base = Math.min(mem * 0.8, 20) * GB;
+  if(isMobile) base *= 0.6;
+  if(cores <= 2) base *= 1.1;
+  base = Math.max(200*MB, Math.min(base, 10*GB));
   return Math.round(base);
 }
 function humanSize(bytes){
@@ -606,7 +643,9 @@ function humanSize(bytes){
   return bytes+' B';
 }
 function getSelectedLimitBytes(){
-  // tylko automatyczny limit
+  const v = maxSizeEl.value;
+  if(v === '500') return 500*MB;
+  if(v === '1000') return 1000*MB;
   return estimateSafeLimitBytes();
 }
 
@@ -1001,6 +1040,7 @@ async function convertAudio(file, fmt){
     audioBuf = null;
   }
 
+  // Formaty wymagające ffmpeg
   if(fmt === 'mp3' || fmt === 'm4a'){
     try{
       return await ffmpegConvert(file, fmt);
