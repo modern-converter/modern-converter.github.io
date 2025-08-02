@@ -78,7 +78,7 @@
     display:inline-flex; align-items:center; gap:8px;
     padding:8px 12px; border-radius:999px;
     border:1px solid hsl(0 0% 100%/.15);
-    background: linear-gradient(180deg, hsl(0 0% 100%/.10), hsl(0 0% 100%/.05));
+    background: linear-gradient(180deg, hsl(0 0% 100%/.10), hsl(0 0% 100% / .05));
     color:white; text-decoration:none; cursor:pointer;
     transition: .2s transform, .2s filter, .2s box-shadow;
   }
@@ -396,6 +396,60 @@
 </main>
 
 <script type="module">
+// FFmpeg wasm import i inicjalizacja
+import { createFFmpeg, fetchFile } from 'https://unpkg.com/@ffmpeg/ffmpeg@0.11.5/dist/ffmpeg.min.js';
+const ffmpeg = createFFmpeg({ log: false });
+const ffmpegReadyPromise = ffmpeg.load().catch(e => {
+  console.warn('FFmpeg nie załadował się:', e);
+});
+
+// Pomocnicza funkcja do konwersji przez ffmpeg.wasm
+async function ffmpegConvert(file, outputFmt){
+  try{
+    await ffmpegReadyPromise;
+    const inputExt = (file.name.split('.').pop() || '').toLowerCase();
+    const inName = `input.${inputExt}`;
+    let outName;
+    if(outputFmt === 'mp3') outName = 'output.mp3';
+    else if(outputFmt === 'm4a') outName = 'output.m4a';
+    else if(outputFmt === 'mp4') outName = 'output.mp4';
+    else if(outputFmt === 'mov') outName = 'output.mov';
+    else outName = `output.${outputFmt}`;
+
+    ffmpeg.FS('writeFile', inName, await fetchFile(file));
+
+    const args = [];
+    if(outputFmt === 'mp3'){
+      args.push('-i', inName, '-codec:a', 'libmp3lame', '-qscale:a', '2', outName);
+    } else if(outputFmt === 'm4a'){
+      args.push('-i', inName, '-c:a', 'aac', '-b:a', '128k', outName);
+    } else if(outputFmt === 'mp4'){
+      args.push('-i', inName, '-c', 'copy', '-f', 'mp4', outName);
+    } else if(outputFmt === 'mov'){
+      args.push('-i', inName, '-c', 'copy', '-f', 'mov', outName);
+    } else {
+      args.push('-i', inName, outName);
+    }
+
+    await ffmpeg.run(...args);
+    const data = ffmpeg.FS('readFile', outName);
+    // sprzątanie
+    try{ ffmpeg.FS('unlink', inName); }catch{}
+    try{ ffmpeg.FS('unlink', outName); }catch{}
+
+    let mime = 'application/octet-stream';
+    if(outputFmt==='mp3') mime='audio/mpeg';
+    else if(outputFmt==='m4a') mime='audio/mp4';
+    else if(outputFmt==='mp4') mime='video/mp4';
+    else if(outputFmt==='mov') mime='video/quicktime';
+
+    return new Blob([data.buffer], {type: mime});
+  }catch(e){
+    console.warn('FFmpeg conversion error:', e);
+    throw e;
+  }
+}
+
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 
@@ -459,15 +513,15 @@ const KB = 1024, MB = 1024*KB, GB = 1024*MB;
 /* Formats per auto-detected category */
 const formatsByCategory = {
   image: ['png','jpeg','webp','avif','png-8','jpeg-low'],
-  audio: ['wav','ogg'],
+  audio: ['wav','mp3','m4a','ogg'],
   document: ['txt','md','pdf-lite','rtf-lite'],
-  video: ['gif-lite','webm-lite','thumb-webp'],
+  video: ['gif-lite','webm-lite','thumb-webp','mp4','mov'],
   archive: ['zip-lite'],
   code: ['txt','json','csv']
 };
 const extToCategory = {
   png:'image', jpg:'image', jpeg:'image', webp:'image', avif:'image', bmp:'image', gif:'image', svg:'image', heic:'image',
-  wav:'audio', mp3:'audio', ogg:'audio', m4a:'audio', flac:'audio',
+  wav:'audio', mp3:'audio', m4a:'audio', ogg:'audio', m4a:'audio', flac:'audio',
   txt:'document', md:'document', html:'document', pdf:'document',
   json:'code', csv:'code', js:'code',
   mp4:'video', webm:'video', mov:'video', mkv:'video', avi:'video', hevc:'video'
@@ -519,6 +573,8 @@ function seoLabel(fmt){
     'webp':'WebP (nowoczesny)',
     'avif':'AVIF (wysoka kompresja)',
     'wav':'WAV (bezstratny)',
+    'mp3':'MP3',
+    'm4a':'M4A (AAC)',
     'ogg':'OGG (kompaktowy)',
     'txt':'TXT (zwykły tekst)',
     'md':'Markdown',
@@ -529,7 +585,9 @@ function seoLabel(fmt){
     'thumb-webp':'Miniatura WebP',
     'zip-lite':'ZIP (lekki)',
     'json':'JSON',
-    'csv':'CSV'
+    'csv':'CSV',
+    'mp4':'MP4',
+    'mov':'MOV'
   };
   return map[fmt] || fmt.toUpperCase();
 }
@@ -770,7 +828,12 @@ async function runPool(tasks, limit){
       while(running.size < limit && i < tasks.length){
         const t = tasks[i++]();
         running.add(t);
-        t.finally(()=>{ running.delete(t); doneCount++; updateOverallProgress(); next(); });
+        t.finally(()=>{
+          running.delete(t);
+          doneCount++;
+          updateOverallProgress();
+          next();
+        });
       }
     };
     next();
@@ -916,7 +979,11 @@ function fmtToMime(fmt){
     avif: 'image/avif',
     'gif-lite': 'image/gif',
     'webm-lite': 'video/webm',
-    'thumb-webp':'image/webp'
+    'thumb-webp':'image/webp',
+    mp3: 'audio/mpeg',
+    m4a: 'audio/mp4',
+    mp4: 'video/mp4',
+    mov: 'video/quicktime'
   };
   return m[fmt] || 'application/octet-stream';
 }
@@ -941,13 +1008,29 @@ async function convertAudio(file, fmt){
   }catch(e){
     audioBuf = null;
   }
+
+  // Formaty wymagające ffmpeg
+  if(fmt === 'mp3' || fmt === 'm4a'){
+    try{
+      return await ffmpegConvert(file, fmt);
+    }catch(e){
+      toast(`Konwersja do ${fmt} nie powiodła się, użyto WAV jako fallback`, 'warn');
+      if(audioBuf) return pcmToWavBlob(audioBuf);
+      return new Blob([array], {type:'audio/wav'});
+    }
+  }
+
   if(!audioBuf){
     return await synthToneTo(fmt);
   }
   if(fmt === 'wav') return pcmToWavBlob(audioBuf);
   if(fmt === 'ogg'){
-    const wav = await pcmToWavBlob(audioBuf);
-    return new Blob([await wav.arrayBuffer()], {type:'audio/ogg'});
+    try{
+      // najlepiej użyć ffmpeg do enkodowania OGG? fallback – proste opakowanie
+      const wav = await pcmToWavBlob(audioBuf);
+      return new Blob([await wav.arrayBuffer()], {type:'audio/ogg'});
+    }catch{}
+    return pcmToWavBlob(audioBuf);
   }
   return pcmToWavBlob(audioBuf);
 }
@@ -1036,6 +1119,15 @@ async function tryReadText(file){
 
 /* Video (lite) */
 async function convertVideo(file, fmt){
+  // Obsługa mp4/mov przez ffmpeg (opakowanie / rewrap)
+  if(fmt === 'mp4' || fmt === 'mov'){
+    try{
+      return await ffmpegConvert(file, fmt);
+    }catch(e){
+      console.warn('FFmpeg video conversion failed, fallback do miniatury', e);
+    }
+  }
+
   let frames = [];
   const sampleFrames = 12;
   try{
@@ -1229,9 +1321,3 @@ init();
 </script>
 </body>
 </html>
-
-
-
-
-
-
