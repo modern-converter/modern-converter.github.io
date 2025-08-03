@@ -8,6 +8,14 @@
   <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1">
   <link rel="icon" href="#" id="dynamic-favicon">
   <link rel="stylesheet" href="style/style.css" />
+  <style>
+    /* Jeśli nie masz mechanizmu ukrywania stron w CSS, to to pomaga: */
+    .page { display: none; }
+    .page.active { display: block; }
+    .format-option.selected { outline: 2px solid #4fc3f7; }
+    .btn.small { font-size: 0.8em; padding: 4px 8px; }
+    /* prosty spinner/progres jeżeli potrzebne */
+  </style>
 </head>
 <body>
   <div class="bg-orbs" aria-hidden="true"></div>
@@ -18,9 +26,9 @@
       <span>File Tool</span>
     </div>
     <nav class="links" aria-label="Linki">
-      <a class="chip active" data-route="home" aria-current="page">Konwerter</a>
-      <a class="chip" data-route="about">O projekcie</a>
-      <a class="chip" data-route="security">Bezpieczeństwo</a>
+      <a class="chip active" data-route="home" aria-current="page" href="#">Konwerter</a>
+      <a class="chip" data-route="about" href="#">O projekcie</a>
+      <a class="chip" data-route="security" href="#">Bezpieczeństwo</a>
     </nav>
   </header>
 
@@ -39,7 +47,7 @@
           <section class="panel" aria-label="Przesyłanie">
             <div class="title"><span class="dot"></span> Prześlij pliki</div>
             <div id="drop" class="drop" tabindex="0" role="button" aria-label="Przeciągnij i upuść pliki lub wybierz z dysku">
-              <input id="fileInput" type="file" multiple aria-label="Wybór plików">
+              <input id="fileInput" type="file" multiple aria-label="Wybór plików" style="display:none">
               <div class="big">Przeciągnij i upuść pliki tutaj</div>
               <div class="small">albo</div>
               <div class="btn" id="browseBtn">Przeglądaj pliki</div>
@@ -54,12 +62,12 @@
             <div class="file-list" id="fileList" aria-live="polite"></div>
           </section>
 
-          <section class="panel" id="settings-panel" aria-label="Ustawienia">
+          <section class="panel" id="settings-panel" aria-label="Ustawienia" style="display:none;">
             <div class="title"><span class="dot"></span> Ustaw format</div>
             <div class="format-selector" aria-label="Wybierz kategorię i format">
               <div class="format-groups" id="formatGroups" role="tablist" aria-label="Kategorie"></div>
               <div class="format-options" id="formatOptions" role="radiogroup" aria-label="Format wyjściowy"></div>
-              <div class="convert-wrap">
+              <div class="convert-wrap" style="margin-top:12px;">
                 <button id="convertBtn" class="btn" aria-label="Rozpocznij konwersję">Konwertuj</button>
               </div>
             </div>
@@ -73,15 +81,17 @@
           <div class="title"><span class="dot"></span> Konwersja</div>
           <div class="progress-wrap">
             <div class="big-title" id="progressTitle">Pracujemy nad Twoimi plikami…</div>
-            <div class="row">
-              <div class="prog" style="flex:1"><i id="progressBar2" style="width:0%"></i></div>
+            <div class="row" style="align-items:center; gap:8px; margin-top:12px;">
+              <div class="prog" style="flex:1; position:relative; background:#222; border-radius:6px; height:12px; overflow:hidden;">
+                <i id="progressBar2" style="position:absolute; left:0; top:0; bottom:0; width:0%; background:linear-gradient(90deg,#4fc3f7,#a78bfa); display:block;"></i>
+              </div>
               <span id="progressText2" style="min-width:110px; text-align:right">0%</span>
             </div>
-            <div class="btn-row">
+            <div class="btn-row" style="margin-top:16px; display:flex; gap:12px;">
               <a id="downloadAll" class="btn disabled" aria-disabled="true" download>Pobierz</a>
               <button id="convertMore" class="btn secondary">Wróć</button>
             </div>
-            <div class="ghost" id="progressHint">Pozostaw kartę otwartą — konwersja odbywa się lokalnie. Po pobraniu możesz wrócić i zacząć od nowa.</div>
+            <div class="ghost" id="progressHint" style="margin-top:12px;">Pozostaw kartę otwartą — konwersja odbywa się lokalnie. Po pobraniu możesz wrócić i zacząć od nowa.</div>
           </div>
         </section>
       </section>
@@ -156,8 +166,7 @@
     })();
   </script>
 
-  <!-- modules -->
-  <script type="module" src="style/transitions.js"></script>
+  <!-- modules (konwertowanie) -->
   <script type="module" src="konwerter/utils.js"></script>
   <script type="module" src="konwerter/image.js"></script>
   <script type="module" src="konwerter/audio.js"></script>
@@ -168,4 +177,3 @@
   <script type="module" src="konwerter/core.js"></script>
 </body>
 </html>
-
