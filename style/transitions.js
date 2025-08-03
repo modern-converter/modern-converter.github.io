@@ -1,83 +1,100 @@
-// transitions.js
-const linkSelector = 'a[href^="/"]:not([target]):not([data-no-ajax])';
-const containerSelector = '.content-wrapper';
+// Prosty loader partiali z aktualizacją historii i dispatchowaniem eventu
+const contentWrapperSelector = '.content-wrapper';
+const navSelector = '.chip';
 
-async function transitionTo(path, { push = true } = {}) {
-  const contentEl = document.querySelector(containerSelector);
-  if (!contentEl) { location.href = path; return; }
-  if (location.pathname === path) return;
-
-  contentEl.classList.add('page-exit');
-  await new Promise(r => setTimeout(r, 250));
-
+async function fetchPartial(url) {
   try {
-    const res = await fetch(path, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-    if (!res.ok) throw new Error('fetch-fail');
-    const html = await res.text();
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    const newContent = doc.querySelector(containerSelector);
-    if (!newContent) { location.href = path; return; }
-
-    contentEl.innerHTML = newContent.innerHTML;
-    document.title = doc.title;
-
-    document.querySelectorAll('.chip').forEach(c => {
-      const href = c.getAttribute('href') || c.dataset.route;
-      if (!href) return;
-      const normalized = href.replace(/\/+$/, '');
-      const target = path.replace(/\/+$/, '');
-      if (normalized === target || (`/${normalized}`) === target) {
-        c.classList.add('active');
-        c.setAttribute('aria-current', 'page');
-      } else {
-        c.classList.remove('active');
-        c.removeAttribute('aria-current');
-      }
-    });
-
-    if (push) history.pushState({}, '', path);
-    contentEl.classList.remove('page-exit');
-    contentEl.classList.add('page-enter');
-    requestAnimationFrame(() => {
-      contentEl.classList.add('page-enter-active');
-    });
-    setTimeout(() => {
-      contentEl.classList.remove('page-enter', 'page-enter-active');
-    }, 300);
+    const res = await fetch(url, {cache: 'no-cache'});
+    if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+    const text = await res.text();
+    return text;
   } catch (e) {
-    location.href = path;
+    console.error('Błąd ładowania partiala:', e);
+    return null;
   }
 }
 
-function attachLinkHandlers() {
-  document.querySelectorAll(linkSelector).forEach(a => {
-    if (a._ajaxBound) return;
-    a._ajaxBound = true;
-    a.addEventListener('click', e => {
-      const href = a.getAttribute('href');
-      if (!href.startsWith('/')) return;
-      e.preventDefault();
-      transitionTo(href);
-    });
-
-    let prefetching = false;
-    a.addEventListener('mouseover', () => {
-      const href = a.getAttribute('href');
-      if (!href.startsWith('/') || prefetching) return;
-      prefetching = true;
-      fetch(href, { method: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-        .finally(() => { prefetching = false; });
-    });
+function setActiveNav(url) {
+  document.querySelectorAll(navSelector).forEach(el => {
+    const href = el.getAttribute('href') || '';
+    // porównaj końcówki (np. about.html vs /style/pages/about.html)
+    if (url.endsWith(href) || href.endsWith(url) || (href && url.includes(href))) {
+      el.classList.add('active');
+      el.setAttribute('aria-current','page');
+    } else {
+      el.classList.remove('active');
+      el.removeAttribute('aria-current');
+    }
   });
 }
 
-window.addEventListener('popstate', () => {
-  transitionTo(location.pathname, { push: false });
-});
+async function transitionTo(url, replace=false) {
+  const contentEl = document.querySelector(contentWrapperSelector);
+  if(!contentEl) return;
+  const html = await fetchPartial(url);
+  if(!html){
+    contentEl.innerHTML = `<div style="padding:30px;color:#fff;">Nie udało się załadować strony. Spróbuj ponownie później.</div>`;
+    return;
+  }
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
 
-document.addEventListener('DOMContentLoaded', () => {
-  attachLinkHandlers();
-  const observer = new MutationObserver(() => attachLinkHandlers());
-  observer.observe(document.body, { childList: true, subtree: true });
+  // Wstaw tylko <body> zawartość (z pominięciem <head>)
+  contentEl.innerHTML = doc.body.innerHTML;
+
+  // Zaktualizuj tytuł dokumentu jeśli jest
+  const titleEl = doc.querySelector('title');
+  if(titleEl) document.title = titleEl.textContent;
+
+  // Aktualizuj aktywne przyciski nawigacji
+  setActiveNav(url);
+
+  // Historia
+  if (replace) {
+    history.replaceState({url}, '', mapToPrettyUrl(url));
+  } else {
+    history.pushState({url}, '', mapToPrettyUrl(url));
+  }
+
+  // Sygnalizuj innym skryptom, że partial się załadował
+  window.dispatchEvent(new Event('partial:loaded'));
+}
+
+// Z mapowaniem path do czytelnego dla użytkownika (np. /style/pages/about.html → /about.html)
+function mapToPrettyUrl(partialUrl){
+  if (partialUrl.endsWith('home.html')) return '/';
+  if (partialUrl.endsWith('about.html')) return '/about.html';
+  if (partialUrl.endsWith('security.html')) return '/security.html';
+  return partialUrl;
+}
+
+function resolvePartialFromPath(pathname){
+  if(pathname === '/' || pathname.endsWith('index.html')) return '/style/pages/home.html';
+  if(pathname.endsWith('about.html')) return '/style/pages/about.html';
+  if(pathname.endsWith('security.html')) return '/style/pages/security.html';
+  return '/style/pages/home.html';
+}
+
+// podpięcie eventów
+window.addEventListener('DOMContentLoaded', () => {
+  // na kliknięcia w navy
+  document.querySelectorAll(navSelector).forEach(el => {
+    el.addEventListener('click', e => {
+      e.preventDefault();
+      const href = el.getAttribute('href');
+      if (!href) return;
+      transitionTo(href);
+    });
+  });
+
+  // obsługa back/forward
+  window.addEventListener('popstate', e => {
+    const state = e.state;
+    const url = state?.url || resolvePartialFromPath(window.location.pathname);
+    transitionTo(url, true);
+  });
+
+  // początkowe załadowanie
+  const initial = resolvePartialFromPath(window.location.pathname);
+  transitionTo(initial, true);
 });
