@@ -1,4 +1,4 @@
-/* Pełna logika konwertera: router, UI formatów, drag&drop, konwersje, progress, download */
+/* Pełna logika konwertera z naprawionymi błędami */
 (() => {
   /* pomocnicze */
   function truncate(str, n) {
@@ -88,9 +88,10 @@
     'mp4':'MP4 (H.264)','webm':'WebM (VP9)','mov':'MOV'
   };
 
+  /* kompatybilność: audio teraz tylko do audio */
   const compatibleCategoryMap = {
     image:    new Set(['image','document','archive','code']),
-    audio:    new Set(['audio','document','archive','code']),
+    audio:    new Set(['audio']), // <- zmienione: blokujemy document i code dla audio
     video:    new Set(['video','image','document','archive','code']),
     document: new Set(['document','image','archive','code']),
     archive:  new Set(['archive']),
@@ -112,7 +113,7 @@
   let files = [];
   let results = [];
 
-  /* router z animacją */
+  /* router */
   const routes = ['home','progress','about','security','help'];
   function doSwitch(route){
     routes.forEach(r=>{
@@ -131,7 +132,7 @@
     });
   }
   function navigate(route){
-    if(!container) { doSwitch(route); return; }
+    if(!container){ doSwitch(route); return; }
     const current = document.querySelector('.page.active');
     if(current && current.id !== 'page-'+route){
       container.classList.add('page-exit');
@@ -495,7 +496,6 @@
   }
 
   /* pomocnicze konwersje */
-
   function fmtToMime(fmt){
     const m = {
       png: 'image/png',
@@ -615,7 +615,7 @@
 
   async function convertAudio(file, fmt){
     if(['mp3','m4a','ogg','flac','opus'].includes(fmt)){
-      console.warn('FFmpeg unavailable; falling back to WAV generation/PCM export.');
+      console.warn('FFmpeg unavailable; fallback do WAV.');
     }
     const array = await file.arrayBuffer();
     let audioBuf = null;
@@ -834,7 +834,7 @@
     return ext;
   }
 
-  /* pobieranie wszystkich */
+  /* pobieranie */
   function updateDownloadLink(items){
     if(!downloadAllBtn) return;
     if(!items.length){
@@ -874,7 +874,7 @@
     return 'converted';
   }
 
-  /* prosty pool */
+  /* pool */
   async function runPool(tasks, limit){
     let i = 0;
     const running = new Set();
@@ -891,11 +891,10 @@
     });
   }
 
-  /* eventy konwersji */
+  /* eventy */
   if(convertBtn){
     convertBtn.addEventListener('click', async ()=>{
       if(!files.length) return toast('Dodaj pliki', 'warn');
-
       navigate('progress');
       results = [];
       doneCount = 0;
@@ -926,12 +925,17 @@
       renderFileList();
       renderResults();
       setOverallProgress(0);
-      navigate('home');
+      selectedCategory = 'image';
+      selectedFormat = 'png';
+      buildFormatUI();
       applyCompatibilityLocks();
+      onFilesChanged();
+      updateDownloadLink([]);
+      navigate('home');
     });
   }
 
-  /* inicjalizacja */
+  /* init */
   function init(){
     const autoLimit = estimateSafeLimitBytes();
     const info = $('#limitInfo');
