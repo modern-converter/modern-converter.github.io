@@ -25,6 +25,9 @@
       <a class="chip" data-route="about" href="#about">O projekcie</a>
       <a class="chip" data-route="security" href="#security">Bezpieczeństwo</a>
       <a class="chip" data-route="help" href="#help">Pomoc</a>
+      <a class="chip" data-route="privacy" href="#privacy">Polityka prywatności</a>
+      <a class="chip" data-route="terms" href="#terms">Regulamin</a>
+      <a class="chip" data-route="contact" href="#contact">Kontakt</a>
     </nav>
   </header>
 
@@ -38,6 +41,7 @@
         <p class="ghost" style="margin-top:6px">Obsługiwane formaty: PNG, JPG, JPEG, WebP, AVIF, GIF, MP4, WebM, MOV, WAV, MP3, M4A, OGG, FLAC, TXT, MD, RTF, PDF, CSV, JSON, ZIP (lite) i inne.</p>
       </section>
 
+      <!-- Konwerter -->
       <section class="page active" id="page-home" aria-label="Konwerter">
         <div id="home-grid">
           <section class="panel" aria-label="Przesyłanie">
@@ -81,6 +85,7 @@
         </div>
       </section>
 
+      <!-- Postęp -->
       <section class="page" id="page-progress" aria-label="Trwa konwersja">
         <section class="panel">
           <div class="title"><span class="dot"></span> Konwersja</div>
@@ -99,6 +104,7 @@
         </section>
       </section>
 
+      <!-- O projekcie -->
       <section class="page" id="page-about" aria-label="O projekcie">
         <div class="content-grid">
           <div class="panel">
@@ -122,6 +128,7 @@
         </div>
       </section>
 
+      <!-- Bezpieczeństwo -->
       <section class="page" id="page-security" aria-label="Bezpieczeństwo">
         <div class="content-grid">
           <div class="panel">
@@ -143,6 +150,7 @@
         </div>
       </section>
 
+      <!-- Pomoc -->
       <section class="page" id="page-help" aria-label="Pomoc">
         <div class="panel">
           <div class="title"><span class="dot"></span> Szybki start</div>
@@ -160,13 +168,41 @@
         </div>
       </section>
 
+      <!-- Polityka prywatności -->
+      <section class="page" id="page-privacy" aria-label="Polityka prywatności">
+        <div class="panel">
+          <div class="title"><span class="dot"></span> Polityka prywatności</div>
+          <p>Twoja prywatność jest najważniejsza. Wszystkie pliki przetwarzane są lokalnie w przeglądarce i nie są wysyłane nigdzie poza Twoje urządzenie. Nie zbieramy danych osobowych, nie wymagamy logowania ani kont.</p>
+          <p>Wszystkie operacje odbywają się po stronie klienta. Możesz używać FileTool anonimowo i bez obaw o wyciek zawartości plików.</p>
+        </div>
+      </section>
+
+      <!-- Regulamin -->
+      <section class="page" id="page-terms" aria-label="Regulamin">
+        <div class="panel">
+          <div class="title"><span class="dot"></span> Regulamin</div>
+          <p>Używając FileTool akceptujesz, że korzystasz z niego na własną odpowiedzialność. Nie ponosimy odpowiedzialności za zawartość plików, które przesyłasz ani za jakiekolwiek szkody wynikłe z ich konwersji.</p>
+          <p>Nie wolno używać usługi do naruszania praw autorskich ani do przesyłania materiałów niezgodnych z prawem. Zastrzegamy sobie prawo do wprowadzenia zmian w regulaminie bez uprzedzenia.</p>
+        </div>
+      </section>
+
+      <!-- Kontakt -->
+      <section class="page" id="page-contact" aria-label="Kontakt">
+        <div class="panel">
+          <div class="title"><span class="dot"></span> Kontakt</div>
+          <p>Masz pytanie, sugestię albo problem? Napisz do nas na adres: <b>support@filetool.pl</b></p>
+          <p>Możesz też śledzić rozwój projektu na kanałach społecznościowych (jeśli są dostępne) lub zgłosić błąd przez formularz feedback.</p>
+        </div>
+      </section>
+
       <footer>
         <span>Działa w 100% lokalnie • Brak wysyłania plików</span>
         <span>Prosty interfejs: najpierw prześlij • potem wybierz • konwertuj</span>
       </footer>
+
     </div>
   </main>
 
-  <script type="module" src="converter.js"></script>
+  <script type="module" src="konwerter/core.js"></script>
 </body>
 </html>
