@@ -31,6 +31,11 @@ import { convertCode } from './code.js';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 
+/* Units (naprawione: wcześniej brakowało) */
+const KB = 1024;
+const MB = 1024 * KB;
+const GB = 1024 * MB;
+
 /* Elements */
 const dropEl = $('#drop');
 const fileInput = $('#fileInput');
@@ -209,7 +214,7 @@ function applyCompatibilityLocks(){
   });
   const enabled = $$('#formatOptions .format-option:not([disabled])');
   if(enabled.length){
-    const stillSelected = enabled.find(o=> o.getAttribute('data-fmt')===selectedFormat);
+    const stillSelected = enabled.find(o=>o.getAttribute('data-fmt')===selectedFormat);
     if(!stillSelected){
       selectedFormat = enabled[0].getAttribute('data-fmt');
       enabled[0].setAttribute('aria-checked','true');
