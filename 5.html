@@ -231,7 +231,10 @@
   .warn{ background: hsl(var(--warn)/.15); border-color: hsl(var(--warn)/.35) }
   .err{ background: hsl(var(--err)/.15); border-color: hsl(var(--err)/.35) }
 
-  /* Hide main inline progress / results / clear per request */
+  /* Hide settings initially per request */
+  #settings-panel{ display:none; }
+
+  /* Also hide inline progress / results / clear initially */
   #inline-progress-row, #results-section, #clearBtn { display:none !important; }
 </style>
 
@@ -288,7 +291,7 @@
           <div class="file-list" id="fileList" aria-live="polite"></div>
         </section>
 
-        <section class="panel" aria-label="Ustawienia">
+        <section class="panel" id="settings-panel" aria-label="Ustawienia">
           <div class="title"><span class="dot"></span> Ustaw format</div>
           <div class="format-selector" aria-label="Wybierz kategorię i format">
             <div class="format-groups" id="formatGroups" role="tablist" aria-label="Kategorie"></div>
@@ -300,37 +303,6 @@
               <div class="prog" style="flex:1"><i id="progressBar" style="width:0%"></i></div>
               <span id="progressText" style="min-width:110px; text-align:right">0%</span>
               <button id="clearBtn" class="btn secondary" aria-label="Wyczyść listę">Wyczyść</button>
-            </div>
-          </div>
-        </section>
-
-        <section class="panel" aria-label="SEO informacje">
-          <div class="title"><span class="dot"></span> Najczęstsze konwersje</div>
-          <div class="content-grid">
-            <div>
-              <ul>
-                <li>JPG do PNG, PNG do WebP, PNG do AVIF — optymalizacja obrazów dla WWW.</li>
-                <li>WAV do MP3, M4A do MP3, OGG do WAV — konwersja dźwięku do popularnych formatów.</li>
-                <li>MP4 do WebM, WebM do MP4, wideo do GIF — szybkie udostępnianie i podglądy.</li>
-                <li>DOCX do PDF (lite via tekst), TXT/MD do PDF/RTF — proste dokumenty w locie.</li>
-                <li>CSV do JSON i JSON do CSV — wymiana danych między narzędziami.</li>
-                <li>ZIP (lite) — szybkie spakowanie zawartości bez serwera.</li>
-              </ul>
-              <p class="ghost">Wszystkie operacje realizowane są lokalnie w przeglądarce przy użyciu standardowych API.</p>
-            </div>
-            <div class="kpi">
-              <div class="panel">
-                <div class="big" style="font-weight:800; font-size:20px">Bez serwera</div>
-                <div class="subtle">Prywatność by design</div>
-              </div>
-              <div class="panel">
-                <div class="big" style="font-weight:800; font-size:20px">Szybko</div>
-                <div class="subtle">Brak uploadu</div>
-              </div>
-              <div class="panel">
-                <div class="big" style="font-weight:800; font-size:20px">Prosto</div>
-                <div class="subtle">Wybierz • Konwertuj</div>
-              </div>
             </div>
           </div>
         </section>
@@ -365,7 +337,7 @@
         <div class="panel">
           <div class="title"><span class="dot"></span> O Filetool</div>
           <p>Filetool to prywatny, działający na urządzeniu konwerter plików. Działa całkowicie w przeglądarce, używając Web API i opcjonalnie silnika FFmpeg do przetwarzania bez wysyłania danych.</p>
-          <p>Stawiamy na bezpieczeństwo, szybkość i prostotę. Interfejs jest intuicyjny: prześlij plik, wybierz format i kliknij „Konwertuj”. Wynik pobierzesz na osobnej stronie postępu.</p>
+          <p>Stawiamy na bezpieczeństwo, szybkość i prostotę. Interfejs jest intuicyjny: prześlij plik, dopiero potem wybierz format i kliknij „Konwertuj”. Wynik pobierzesz na osobnej stronie postępu.</p>
           <div class="kpi">
             <div class="panel"><div class="big" style="font-weight:800; font-size:22px">100% Lokalnie</div><div class="subtle">Brak wysyłek</div></div>
             <div class="panel"><div class="big" style="font-weight:800; font-size:22px">Adaptacyjnie</div><div class="subtle">Bezpieczne limity</div></div>
@@ -423,7 +395,7 @@
 
     <footer>
       <span>Działa w 100% lokalnie • Brak wysyłania plików</span>
-      <span>Prosty interfejs: prześlij • wybierz • konwertuj</span>
+      <span>Prosty interfejs: najpierw prześlij • potem wybierz • konwertuj</span>
     </footer>
   </div>
 </main>
@@ -672,6 +644,11 @@ let files = [];
 let results = [];
 
 /* File list rendering */
+function onFilesChanged(){
+  // Show settings panel only when there are files
+  const settings = document.getElementById('settings-panel');
+  if(settings) settings.style.display = files.length ? 'block' : 'none';
+}
 function addFiles(newFiles){
   const limitBytes = estimateSafeLimitBytes();
   const currentTotal = files.reduce((a,f)=>a+f.size,0);
@@ -686,6 +663,7 @@ function addFiles(newFiles){
     addedTotal += f.size;
   }
   renderFileList();
+  onFilesChanged();
   const detected = autoCategoryForFiles(files);
   if(detected !== selectedCategory){
     selectedCategory = detected;
@@ -720,6 +698,7 @@ function renderFileList(){
       const idx = +btn.getAttribute('data-remove');
       files.splice(idx,1);
       renderFileList();
+      onFilesChanged();
       const detected = autoCategoryForFiles(files);
       if(detected !== selectedCategory){
         selectedCategory = detected;
@@ -1362,6 +1341,8 @@ function init(){
   }
   buildFormatUI();
   renderResults();
+  // Ensure settings are hidden on first load (no files)
+  onFilesChanged();
 }
 init();
 </script>
