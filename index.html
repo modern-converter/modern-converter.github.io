@@ -9,11 +9,12 @@
   <link rel="icon" href="#" id="dynamic-favicon">
   <link rel="stylesheet" href="style/style.css" />
   <style>
-    .page { }
-    .chip.active { background:#2f8ff7; color:#fff; }
-    .content-wrapper { max-width:1100px; margin:0 auto; padding:0; }
-    /* fallback jeśli JS wyłączony */
-    .no-js-fallback { padding:40px; text-align:center; background:#1f2b45; border-radius:10px; margin-top:24px; }
+    /* Jeśli nie masz mechanizmu ukrywania stron w CSS, to to pomaga: */
+    .page { display: none; }
+    .page.active { display: block; }
+    .format-option.selected { outline: 2px solid #4fc3f7; }
+    .btn.small { font-size: 0.8em; padding: 4px 8px; }
+    /* prosty spinner/progres jeżeli potrzebne */
   </style>
 </head>
 <body>
@@ -25,23 +26,123 @@
       <span>File Tool</span>
     </div>
     <nav class="links" aria-label="Linki">
-      <a class="chip" data-route="home" href="/style/pages/home.html">Konwerter</a>
-      <a class="chip" data-route="about" href="/style/pages/about.html">O projekcie</a>
-      <a class="chip" data-route="security" href="/style/pages/security.html">Bezpieczeństwo</a>
+      <a class="chip active" data-route="home" aria-current="page" href="#">Konwerter</a>
+      <a class="chip" data-route="about" href="#">O projekcie</a>
+      <a class="chip" data-route="security" href="#">Bezpieczeństwo</a>
     </nav>
   </header>
 
   <main class="container">
     <div class="app">
-      <!-- tutaj będą wczytywane partiale -->
-      <div class="content-wrapper">
-        <noscript>
-          <div class="no-js-fallback">
-            <p>JavaScript jest wymagany do poprawnego działania konwertera. Jeśli nadal chcesz przejść ręcznie, skorzystaj z:</p>
-            <p><a href="/style/pages/home.html">Konwerter</a> | <a href="/style/pages/about.html">O projekcie</a> | <a href="/style/pages/security.html">Bezpieczeństwo</a></p>
+      <section class="hero">
+        <h1>DARMOWY Konwerter plików FileTool</h1>
+        <p>Konwertuj obrazy, audio, dokumenty, archiwa i wideo bezpośrednio w przeglądarce. Zero wysyłania plików — pełna prywatność.</p>
+        <p class="ghost" style="margin-top:6px">Szybka i bezpieczna konwersja online • 100% lokalnie • Bez konta</p>
+        <p class="ghost" style="margin-top:6px">Obsługiwane formaty: PNG, JPG, WebP, AVIF, GIF, MP4, WebM, WAV, MP3, TXT, MD, PDF, JSON, CSV i inne.</p>
+      </section>
+
+      <!-- KONWERTER -->
+      <section class="page active" id="page-home" aria-label="Konwerter">
+        <div id="home-grid">
+          <section class="panel" aria-label="Przesyłanie">
+            <div class="title"><span class="dot"></span> Prześlij pliki</div>
+            <div id="drop" class="drop" tabindex="0" role="button" aria-label="Przeciągnij i upuść pliki lub wybierz z dysku">
+              <input id="fileInput" type="file" multiple aria-label="Wybór plików" style="display:none">
+              <div class="big">Przeciągnij i upuść pliki tutaj</div>
+              <div class="small">albo</div>
+              <div class="btn" id="browseBtn">Przeglądaj pliki</div>
+              <div class="row" style="justify-content:center; gap:8px; margin-top:6px">
+                <span class="status ok">Lokalna konwersja</span>
+                <span class="status">Brak limitów chmury</span>
+              </div>
+              <div class="row" id="limitInfo" style="justify-content:center; gap:8px; margin-top:6px">
+                <span class="status">Automatyczny limit urządzenia</span>
+              </div>
+            </div>
+            <div class="file-list" id="fileList" aria-live="polite"></div>
+          </section>
+
+          <section class="panel" id="settings-panel" aria-label="Ustawienia" style="display:none;">
+            <div class="title"><span class="dot"></span> Ustaw format</div>
+            <div class="format-selector" aria-label="Wybierz kategorię i format">
+              <div class="format-groups" id="formatGroups" role="tablist" aria-label="Kategorie"></div>
+              <div class="format-options" id="formatOptions" role="radiogroup" aria-label="Format wyjściowy"></div>
+              <div class="convert-wrap" style="margin-top:12px;">
+                <button id="convertBtn" class="btn" aria-label="Rozpocznij konwersję">Konwertuj</button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <!-- POSTĘP -->
+      <section class="page" id="page-progress" aria-label="Trwa konwersja">
+        <section class="panel">
+          <div class="title"><span class="dot"></span> Konwersja</div>
+          <div class="progress-wrap">
+            <div class="big-title" id="progressTitle">Pracujemy nad Twoimi plikami…</div>
+            <div class="row" style="align-items:center; gap:8px; margin-top:12px;">
+              <div class="prog" style="flex:1; position:relative; background:#222; border-radius:6px; height:12px; overflow:hidden;">
+                <i id="progressBar2" style="position:absolute; left:0; top:0; bottom:0; width:0%; background:linear-gradient(90deg,#4fc3f7,#a78bfa); display:block;"></i>
+              </div>
+              <span id="progressText2" style="min-width:110px; text-align:right">0%</span>
+            </div>
+            <div class="btn-row" style="margin-top:16px; display:flex; gap:12px;">
+              <a id="downloadAll" class="btn disabled" aria-disabled="true" download>Pobierz</a>
+              <button id="convertMore" class="btn secondary">Wróć</button>
+            </div>
+            <div class="ghost" id="progressHint" style="margin-top:12px;">Pozostaw kartę otwartą — konwersja odbywa się lokalnie. Po pobraniu możesz wrócić i zacząć od nowa.</div>
           </div>
-        </noscript>
-      </div>
+        </section>
+      </section>
+
+      <!-- O PROJEKCIE -->
+      <section class="page" id="page-about" aria-label="O projekcie">
+        <div class="content-grid">
+          <div class="panel">
+            <div class="title"><span class="dot"></span> O Filetool</div>
+            <p>Filetool to prywatny konwerter plików działający w przeglądarce. Wszystko odbywa się lokalnie — żadne pliki nie opuszczają urządzenia.</p>
+            <p>Prosty workflow: prześlij plik, ustaw format i konwertuj. Wynik pobierzesz na stronie postępu.</p>
+          </div>
+          <div class="panel">
+            <div class="title"><span class="dot"></span> Dlaczego warto</div>
+            <ul>
+              <li>Prywatność: nic nie trafia do chmury.</li>
+              <li>Bezpieczeństwo: brak logowania, bez zewnętrznych serwerów.</li>
+              <li>Wydajność: brak uploadu, szybkie działanie.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- BEZPIECZEŃSTWO / POLITYKI -->
+      <section class="page" id="page-security" aria-label="Bezpieczeństwo">
+        <div class="content-grid">
+          <div class="panel">
+            <div class="title"><span class="dot"></span> Bezpieczeństwo i prywatność</div>
+            <ul>
+              <li>Pliki nie opuszczają urządzenia — wszystko dzieje się w przeglądarce.</li>
+              <li>Brak kont, brak śledzenia.</li>
+              <li>Adaptacyjne limity pamięci i zasobów dla stabilności.</li>
+              <li>Piaskownica przeglądarki — brak dodatkowych uprawnień.</li>
+            </ul>
+          </div>
+          <div class="panel">
+            <div class="title"><span class="dot"></span> Regulaminy i kontakt</div>
+            <h4>Polityka prywatności</h4>
+            <p>Nie zbieramy żadnych danych osobowych. Wszystkie konwersje odbywają się lokalnie.</p>
+            <h4>Regulamin</h4>
+            <p>Używasz narzędzia na własną odpowiedzialność. Nie ponosimy odpowiedzialności za treści przetwarzane przez użytkownika.</p>
+            <h4>Kontakt</h4>
+            <p>Jeśli masz pytania, wyślij wiadomość na: <a href="mailto:kontakt@example.com" style="color:inherit; text-decoration:underline;">kontakt@example.com</a></p>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <span>Działa w 100% lokalnie • Brak wysyłania plików</span>
+        <span>Prosty interfejs: najpierw prześlij • potem wybierz • konwertuj</span>
+      </footer>
     </div>
   </main>
 
@@ -65,8 +166,7 @@
     })();
   </script>
 
-  <!-- AJAXowe partiale + konwerter -->
-  <script type="module" src="style/transitions.js"></script>
+  <!-- modules (konwertowanie) -->
   <script type="module" src="konwerter/utils.js"></script>
   <script type="module" src="konwerter/image.js"></script>
   <script type="module" src="konwerter/audio.js"></script>
@@ -75,31 +175,5 @@
   <script type="module" src="konwerter/archive.js"></script>
   <script type="module" src="konwerter/code.js"></script>
   <script type="module" src="konwerter/core.js"></script>
-
-  <script>
-    // po załadowaniu: domyślnie wczytaj home jeśli nie wskazano innej ścieżki
-    document.addEventListener('DOMContentLoaded', ()=>{
-      const path = window.location.pathname;
-      // jeśli root albo index, załaduj partial home
-      if (path === '/' || path.endsWith('index.html')) {
-        transitionTo('/style/pages/home.html');
-      } else if (path.endsWith('about.html')) {
-        transitionTo('/style/pages/about.html');
-      } else if (path.endsWith('security.html')) {
-        transitionTo('/style/pages/security.html');
-      } else {
-        // fallback: home
-        transitionTo('/style/pages/home.html');
-      }
-    });
-
-    // przekazujemy event do core.js żeby mógł się zainicjować ponownie po wczytaniu partiala
-    window.addEventListener('partial:loaded', ()=>{
-      // jeśli core.js expose'uje setup, powinien nasłuchiwać tego eventu;
-      // w razie potrzeby można tu np. wywołać globalną inicjację:
-      if (window.setupAfterLoad) window.setupAfterLoad();
-    });
-  </script>
 </body>
 </html>
-
