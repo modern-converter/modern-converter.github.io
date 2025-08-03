@@ -24,10 +24,6 @@
       <a class="chip" data-route="home" href="#home" aria-current="page">Konwerter</a>
       <a class="chip" data-route="about" href="#about">O projekcie</a>
       <a class="chip" data-route="security" href="#security">Bezpieczeństwo</a>
-      <a class="chip" data-route="help" href="#help">Pomoc</a>
-      <a class="chip" data-route="privacy" href="#privacy">Polityka prywatności</a>
-      <a class="chip" data-route="terms" href="#terms">Regulamin</a>
-      <a class="chip" data-route="contact" href="#contact">Kontakt</a>
     </nav>
   </header>
 
@@ -128,24 +124,62 @@
         </div>
       </section>
 
-      <!-- Bezpieczeństwo -->
+      <!-- Bezpieczeństwo + polityka/regulamin/kontakt -->
       <section class="page" id="page-security" aria-label="Bezpieczeństwo">
-        <div class="content-grid">
-          <div class="panel">
-            <div class="title"><span class="dot"></span> Bezpieczeństwo i prywatność</div>
-            <ul>
-              <li>Pliki nie opuszczają urządzenia. Wszystko dzieje się w przeglądarce.</li>
-              <li>Brak kont i logowania.</li>
-              <li>Heurystyki pamięci dbają o responsywność urządzenia.</li>
-              <li>Piaskownica przeglądarki — brak dodatkowych uprawnień.</li>
-            </ul>
+        <div class="panel">
+          <div class="title"><span class="dot"></span> Bezpieczeństwo i informacje</div>
+          <div class="security-subnav" role="tablist" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">
+            <button class="subtab" data-sub="security" aria-pressed="true" type="button">Bezpieczeństwo</button>
+            <button class="subtab" data-sub="privacy" aria-pressed="false" type="button">Polityka prywatności</button>
+            <button class="subtab" data-sub="terms" aria-pressed="false" type="button">Regulamin</button>
+            <button class="subtab" data-sub="contact" aria-pressed="false" type="button">Kontakt</button>
           </div>
-          <div class="panel">
-            <div class="title"><span class="dot"></span> Najlepsze praktyki</div>
-            <ul>
-              <li>Wybieraj nowoczesne formaty (WebP/AVIF dla obrazów, WebM dla wideo).</li>
-              <li>Redukuj rozdzielczość/bitrate, by przyspieszyć konwersję na słabszych urządzeniach.</li>
-            </ul>
+
+          <div class="security-content">
+            <div class="sec-panel" id="sec-security">
+              <div class="content-grid">
+                <div class="panel">
+                  <div class="title"><span class="dot"></span> Bezpieczeństwo i prywatność</div>
+                  <ul>
+                    <li>Pliki nie opuszczają urządzenia. Wszystko dzieje się w przeglądarce.</li>
+                    <li>Brak kont i logowania.</li>
+                    <li>Heurystyki pamięci dbają o responsywność urządzenia.</li>
+                    <li>Piaskownica przeglądarki — brak dodatkowych uprawnień.</li>
+                  </ul>
+                </div>
+                <div class="panel">
+                  <div class="title"><span class="dot"></span> Najlepsze praktyki</div>
+                  <ul>
+                    <li>Wybieraj nowoczesne formaty (WebP/AVIF dla obrazów, WebM dla wideo).</li>
+                    <li>Redukuj rozdzielczość/bitrate, by przyspieszyć konwersję na słabszych urządzeniach.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="sec-panel" id="sec-privacy" style="display:none">
+              <div class="panel">
+                <div class="title"><span class="dot"></span> Polityka prywatności</div>
+                <p>Twoja prywatność jest najważniejsza. Wszystkie pliki przetwarzane są lokalnie w przeglądarce i nie są wysyłane nigdzie poza Twoje urządzenie. Nie zbieramy danych osobowych, nie wymagamy logowania ani kont.</p>
+                <p>Wszystkie operacje odbywają się po stronie klienta. Możesz używać FileTool anonimowo i bez obaw o wyciek zawartości plików.</p>
+              </div>
+            </div>
+
+            <div class="sec-panel" id="sec-terms" style="display:none">
+              <div class="panel">
+                <div class="title"><span class="dot"></span> Regulamin</div>
+                <p>Używając FileTool akceptujesz, że korzystasz z niego na własną odpowiedzialność. Nie ponosimy odpowiedzialności za zawartość plików, które przesyłasz ani za jakiekolwiek szkody wynikłe z ich konwersji.</p>
+                <p>Nie wolno używać usługi do naruszania praw autorskich ani do przesyłania materiałów niezgodnych z prawem. Zastrzegamy sobie prawo do wprowadzenia zmian w regulaminie bez uprzedzenia.</p>
+              </div>
+            </div>
+
+            <div class="sec-panel" id="sec-contact" style="display:none">
+              <div class="panel">
+                <div class="title"><span class="dot"></span> Kontakt</div>
+                <p>Masz pytanie, sugestię albo problem? Napisz do nas na adres: <b>support@filetool.pl</b></p>
+                <p>Możesz też śledzić rozwój projektu na kanałach społecznościowych (jeśli są dostępne) lub zgłosić błąd przez formularz feedback.</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -165,33 +199,6 @@
           <div class="title"><span class="dot"></span> FAQ</div>
           <p><b>Czy pliki są wysyłane do Internetu?</b> Nie — przetwarzamy lokalnie.</p>
           <p><b>Dlaczego niektóre formaty mają dopisek „lite”?</b> To lekkie, zgodne substytuty tworzone w przeglądarce, gdy pełne kodowanie nie jest dostępne.</p>
-        </div>
-      </section>
-
-      <!-- Polityka prywatności -->
-      <section class="page" id="page-privacy" aria-label="Polityka prywatności">
-        <div class="panel">
-          <div class="title"><span class="dot"></span> Polityka prywatności</div>
-          <p>Twoja prywatność jest najważniejsza. Wszystkie pliki przetwarzane są lokalnie w przeglądarce i nie są wysyłane nigdzie poza Twoje urządzenie. Nie zbieramy danych osobowych, nie wymagamy logowania ani kont.</p>
-          <p>Wszystkie operacje odbywają się po stronie klienta. Możesz używać FileTool anonimowo i bez obaw o wyciek zawartości plików.</p>
-        </div>
-      </section>
-
-      <!-- Regulamin -->
-      <section class="page" id="page-terms" aria-label="Regulamin">
-        <div class="panel">
-          <div class="title"><span class="dot"></span> Regulamin</div>
-          <p>Używając FileTool akceptujesz, że korzystasz z niego na własną odpowiedzialność. Nie ponosimy odpowiedzialności za zawartość plików, które przesyłasz ani za jakiekolwiek szkody wynikłe z ich konwersji.</p>
-          <p>Nie wolno używać usługi do naruszania praw autorskich ani do przesyłania materiałów niezgodnych z prawem. Zastrzegamy sobie prawo do wprowadzenia zmian w regulaminie bez uprzedzenia.</p>
-        </div>
-      </section>
-
-      <!-- Kontakt -->
-      <section class="page" id="page-contact" aria-label="Kontakt">
-        <div class="panel">
-          <div class="title"><span class="dot"></span> Kontakt</div>
-          <p>Masz pytanie, sugestię albo problem? Napisz do nas na adres: <b>support@filetool.pl</b></p>
-          <p>Możesz też śledzić rozwój projektu na kanałach społecznościowych (jeśli są dostępne) lub zgłosić błąd przez formularz feedback.</p>
         </div>
       </section>
 
