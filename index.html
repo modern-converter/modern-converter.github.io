@@ -719,10 +719,10 @@ function estimateSafeLimitBytes(){
   const cores = (navigator.hardwareConcurrency || 4);
   const ua = navigator.userAgent.toLowerCase();
   const isMobile = /iphone|ipad|android|mobile/.test(ua);
-  let base = Math.min(mem * 0.8, 20) * GB;
+  let base = Math.min(mem * 5, 50) * GB;
   if(isMobile) base *= 0.6;
-  if(cores <= 2) base *= 1.1;
-  base = Math.max(200*MB, Math.min(base, 10*GB));
+  if(cores <= 2) base *= 3;
+  base = Math.max(200*MB, Math.min(base, 50*GB));
   return Math.round(base);
 }
 function humanSize(bytes){
@@ -1455,3 +1455,4 @@ init();
 </script>
 </body>
 </html>
+
