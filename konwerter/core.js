@@ -9,7 +9,16 @@ import {
   estimateSafeLimitBytes,
   suggestPackBaseName,
   commonPrefix,
-  once
+  once,
+  fmtToMime,
+  loadImage,
+  tryReadText,
+  escapeHTML,
+  escapeRTF,
+  generateMiniPDF,
+  generatePlaceholderCanvas,
+  concatBlobs,
+  synthFrames
 } from './utils.js';
 import { convertImage } from './image.js';
 import { convertAudio } from './audio.js';
@@ -48,7 +57,7 @@ let selectedCategory = 'image';
 let selectedFormat = 'png';
 
 /* Router / navigation */
-const routes = ['home','progress','about','security','help','privacy','terms','contact'];
+const routes = ['home','about','security','help'];
 const chips = $$('.chip[data-route]');
 chips.forEach(ch => ch.addEventListener('click', e=>{
   e.preventDefault();
@@ -86,6 +95,29 @@ function toast(msg, type='ok'){
   document.body.appendChild(el);
   setTimeout(()=>{ el.style.transition='opacity .3s'; el.style.opacity='0'; }, 1800);
   setTimeout(()=>el.remove(), 2200);
+}
+
+/* Subtaby bezpieczeństwa */
+function setupSecuritySubtabs(){
+  const subtabs = $$('.subtab');
+  const panels = {
+    security: $('#sec-security'),
+    privacy: $('#sec-privacy'),
+    terms: $('#sec-terms'),
+    contact: $('#sec-contact')
+  };
+  subtabs.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const target = btn.getAttribute('data-sub');
+      subtabs.forEach(b=>{
+        b.setAttribute('aria-pressed', b===btn ? 'true' : 'false');
+      });
+      Object.entries(panels).forEach(([k, el])=>{
+        if(!el) return;
+        el.style.display = k === target ? 'block' : 'none';
+      });
+    });
+  });
 }
 
 /* File UI logic */
@@ -496,6 +528,7 @@ function init(){
   renderFileList();
   renderResults();
   onFilesChanged();
+  setupSecuritySubtabs();
   navigate((location.hash||'#home').slice(1));
 }
 init();
