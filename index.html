@@ -4,15 +4,15 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>File Tool — DARMOWY Konwerter plików online | Konwersja obrazów, audio, dokumentów i wideo lokalnie</title>
-  <meta name="description" content="Filetool to szybki, darmowy i bezpieczny konwerter plików online. Konwertuj obrazy, audio, dokumenty, archiwa i wideo lokalnie w przeglądarce — bez wysyłania plików na serwer.">
-  <link rel="canonical" href="https://filetool.pl/">
+  <meta name="description" content="Filetool to szybki, darmowy i bezpieczny konwerter plików online. Konwertuj obrazy, audio, dokumenty, archiwa i wideo lokalnie w przeglądarce — bez wysyłania plików na serwer. Obsługa: PNG, JPG, WebP, AVIF, PDF, TXT, MD, CSV, JSON, MP3, WAV, OGG, FLAC, MP4, WebM, GIF i więcej.">
+  <link rel="canonical" href="https://filetool.pl">
   <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1">
   <meta name="keywords" content="konwerter plików, konwerter obrazów, konwersja audio, pdf online, webp, avif, webm, docx do pdf, jpg do png, wav do mp3, kompresja zdjęć, przeglądarkowy konwerter, bezpieczna konwersja, offline, prywatność, csv do xlsx, markdown do pdf, mp4 do webm, gif tworzenie, zip online, tar, md do html">
   <link rel="icon" href="#" id="dynamic-favicon">
   <link rel="stylesheet" href="style.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1712836182508924" crossorigin="anonymous"></script>
 </head>
 <body>
-  <!-- banner zgody zostanie wstrzyknięty przez consent.js -->
   <div class="bg-orbs" aria-hidden="true"></div>
 
   <header class="nav" role="navigation" aria-label="Nawigacja główna">
@@ -21,11 +21,10 @@
       <span>File Tool</span>
     </div>
     <nav class="links" aria-label="Linki">
-      <a class="chip" data-route="home" aria-current="page">Konwerter</a>
-      <a class="chip" data-route="about">O projekcie</a>
-      <a class="chip" data-route="security">Bezpieczeństwo</a>
-      <a class="chip" data-route="help">Pomoc</a>
-      <a class="chip" href="/privacy.html">Prywatność</a>
+      <a class="chip" data-route="home" href="#home" aria-current="page">Konwerter</a>
+      <a class="chip" data-route="about" href="#about">O projekcie</a>
+      <a class="chip" data-route="security" href="#security">Bezpieczeństwo</a>
+      <a class="chip" data-route="help" href="#help">Pomoc</a>
     </nav>
   </header>
 
@@ -100,17 +99,74 @@
         </section>
       </section>
 
+      <section class="page" id="page-about" aria-label="O projekcie">
+        <div class="content-grid">
+          <div class="panel">
+            <div class="title"><span class="dot"></span> O Filetool</div>
+            <p>Filetool to prywatny, działający na urządzeniu konwerter plików. Działa całkowicie w przeglądarce, używając Web API i opcjonalnie silnika FFmpeg do przetwarzania bez wysyłania danych.</p>
+            <p>Stawiamy na bezpieczeństwo, szybkość i prostotę. Interfejs jest intuicyjny: prześlij plik, dopiero potem wybierz format i kliknij „Konwertuj”. Wynik pobierzesz na osobnej stronie postępu.</p>
+            <div class="kpi">
+              <div class="panel"><div class="big" style="font-weight:800; font-size:22px">100% Lokalnie</div><div class="subtle">Brak wysyłek</div></div>
+              <div class="panel"><div class="big" style="font-weight:800; font-size:22px">Adaptacyjnie</div><div class="subtle">Bezpieczne limity</div></div>
+              <div class="panel"><div class="big" style="font-weight:800; font-size:22px">Standardy</div><div class="subtle">Web API + FFmpeg</div></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="title"><span class="dot"></span> Dlaczego warto</div>
+            <ul>
+              <li>Prywatność: nic nie trafia do chmury.</li>
+              <li>Uniwersalność: obsługa popularnych formatów grafiki, audio, wideo i dokumentów.</li>
+              <li>Wydajność: brak uploadu, szybkie działanie.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-security" aria-label="Bezpieczeństwo">
+        <div class="content-grid">
+          <div class="panel">
+            <div class="title"><span class="dot"></span> Bezpieczeństwo i prywatność</div>
+            <ul>
+              <li>Pliki nie opuszczają urządzenia. Wszystko dzieje się w przeglądarce.</li>
+              <li>Brak kont i logowania.</li>
+              <li>Heurystyki pamięci dbają o responsywność urządzenia.</li>
+              <li>Piaskownica przeglądarki — brak dodatkowych uprawnień.</li>
+            </ul>
+          </div>
+          <div class="panel">
+            <div class="title"><span class="dot"></span> Najlepsze praktyki</div>
+            <ul>
+              <li>Wybieraj nowoczesne formaty (WebP/AVIF dla obrazów, WebM dla wideo).</li>
+              <li>Redukuj rozdzielczość/bitrate, by przyspieszyć konwersję na słabszych urządzeniach.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-help" aria-label="Pomoc">
+        <div class="panel">
+          <div class="title"><span class="dot"></span> Szybki start</div>
+          <ol>
+            <li>Przeciągnij i upuść pliki lub wybierz z dysku.</li>
+            <li>Wybierz format wyjściowy.</li>
+            <li>Kliknij „Konwertuj”. Otworzy się strona postępu z paskiem.</li>
+            <li>Po zakończeniu pobierz wynik lub wróć do startu (reset).</li>
+          </ol>
+        </div>
+        <div class="panel">
+          <div class="title"><span class="dot"></span> FAQ</div>
+          <p><b>Czy pliki są wysyłane do Internetu?</b> Nie — przetwarzamy lokalnie.</p>
+          <p><b>Dlaczego niektóre formaty mają dopisek „lite”?</b> To lekkie, zgodne substytuty tworzone w przeglądarce, gdy pełne kodowanie nie jest dostępne.</p>
+        </div>
+      </section>
+
       <footer>
         <span>Działa w 100% lokalnie • Brak wysyłania plików</span>
         <span>Prosty interfejs: najpierw prześlij • potem wybierz • konwertuj</span>
-        <span><a href="/privacy.html">Polityka prywatności</a></span>
-        <span><a href="/terms.html">Regulamin</a></span>
-        <span><a href="/contact.html">Kontakt</a></span>
       </footer>
     </div>
   </main>
 
-  <script src="consent.js" defer></script>
-  <script src="converter.js" defer></script>
+  <script type="module" src="converter.js"></script>
 </body>
 </html>
