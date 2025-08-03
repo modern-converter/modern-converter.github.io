@@ -1,0 +1,64 @@
+<section class="hero">
+  <h1>DARMOWY Konwerter plików FileTool</h1>
+  <p>Konwertuj obrazy, audio, dokumenty, archiwa i wideo lokalnie w przeglądarce. Zero wysyłania plików — nic nie trafia na serwer.</p>
+  <div class="ghost small-info">
+    <span>100% lokalnie • Bez konta • Szybko i bezpiecznie</span>
+  </div>
+</section>
+
+<div id="home-grid">
+  <section class="panel" aria-label="Przesyłanie">
+    <div class="title"><span class="dot"></span> Prześlij pliki</div>
+    <div id="drop" class="drop" tabindex="0" role="button" aria-label="Przeciągnij i upuść pliki lub wybierz z dysku">
+      <input id="fileInput" type="file" multiple aria-label="Wybór plików">
+      <div class="big">Przeciągnij i upuść pliki tutaj</div>
+      <div class="small">albo</div>
+      <div class="btn" id="browseBtn">Przeglądaj pliki</div>
+      <div class="row" style="justify-content:center; gap:8px; margin-top:6px">
+        <span class="status ok">Lokalna konwersja</span>
+        <span class="status">Brak limitów chmury</span>
+      </div>
+      <div class="row" id="limitInfo" style="justify-content:center; gap:8px; margin-top:6px">
+        <span class="status">Automatyczny limit urządzenia</span>
+      </div>
+    </div>
+    <div class="file-list" id="fileList" aria-live="polite"></div>
+  </section>
+
+  <section class="panel" id="settings-panel" aria-label="Ustawienia">
+    <div class="title"><span class="dot"></span> Ustaw format</div>
+    <div class="format-selector" aria-label="Wybierz kategorię i format">
+      <div class="format-groups" id="formatGroups" role="tablist" aria-label="Kategorie"></div>
+      <div class="format-options" id="formatOptions" role="radiogroup" aria-label="Format wyjściowy"></div>
+      <div class="convert-wrap">
+        <button id="convertBtn" class="btn" aria-label="Rozpocznij konwersję">Konwertuj</button>
+      </div>
+      <div class="row" id="inline-progress-row" style="margin-top:6px">
+        <div class="prog" style="flex:1"><i id="progressBar" style="width:0%"></i></div>
+        <span id="progressText" style="min-width:110px; text-align:right">0%</span>
+        <button id="clearBtn" class="btn secondary" aria-label="Wyczyść listę">Wyczyść</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="results-section" aria-label="Wyniki">
+    <div class="title"><span class="dot"></span> Wyniki</div>
+    <div class="file-list" id="resultList"></div>
+  </section>
+</div>
+
+<section class="panel" id="page-progress-inner">
+  <div class="title"><span class="dot"></span> Konwersja</div>
+  <div class="progress-wrap">
+    <div class="big-title" id="progressTitle">Pracujemy nad Twoimi plikami…</div>
+    <div class="row">
+      <div class="prog" style="flex:1"><i id="progressBar2" style="width:0%"></i></div>
+      <span id="progressText2" style="min-width:110px; text-align:right">0%</span>
+    </div>
+    <div class="btn-row">
+      <a id="downloadAll" class="btn" download>Pobierz</a>
+      <button id="convertMore" class="btn secondary">Wróć</button>
+    </div>
+    <div class="ghost" id="progressHint">Pozostaw kartę otwartą — konwersja odbywa się lokalnie. Po pobraniu możesz wrócić i zacząć od nowa.</div>
+  </div>
+</section>
