@@ -13,6 +13,38 @@ const GB = MB * 1024;
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 
+async function transitionPage(current, target) {
+  if (!current && !target) return;
+  if (current) current.classList.remove('active');
+  if (target) target.classList.add('active');
+}
+
+function resetProgressPage(){
+  if(progressBar2) progressBar2.style.width='0%';
+  if(progressText2) progressText2.textContent='0%';
+  if(progressTitle){
+    progressTitle.textContent = 'Pracujemy nad Twoimi plikami…';
+  }
+  if(downloadAllBtn){
+    downloadAllBtn.classList.add('disabled');
+    downloadAllBtn.setAttribute('aria-disabled','true');
+    downloadAllBtn.removeAttribute('href');
+    downloadAllBtn.removeAttribute('download');
+    downloadAllBtn.textContent='Pobierz';
+  }
+}
+
+function resetHome(){
+  files = [];
+  results = [];
+  doneCount = 0;
+  renderFileList();
+  renderResults();
+  onFilesChanged();
+  setOverallProgress(0);
+  resetProgressPage();
+}
+
 let files = [];
 let results = [];
 let selectedCategory = 'image';
@@ -39,7 +71,6 @@ const labelMap = {
   'png':'PNG','jpeg':'JPEG','webp':'WebP','avif':'AVIF','gif':'GIF','wav':'WAV','mp3':'MP3','txt':'TXT','md':'Markdown'
 };
 
-// kompatybilność: audio tylko do audio (poprawione)
 const compatibleCategoryMap = {
   image: new Set(['image','document','archive','code']),
   audio: new Set(['audio']),
@@ -59,342 +90,9 @@ const perCategoryAllowedFormats = {
 
 /* elementy dynamiczne (po załadowaniu partiali) */
 let dropEl, fileInput, fileListEl, resultListEl;
-let progressBar, progressText, progressBar2, progressText2, progressTitle;
+let progressText, progressBar2, progressText2, progressTitle;
 let convertBtn, downloadAllBtn, convertMoreBtn, browseBtn;
 let formatGroupsEl, formatOptionsEl;
-
-function setupAfterLoad() {
-  // pobierz referencje
-  dropEl = $('#drop');
-  fileInput = $('#fileInput');
-  fileListEl = $('#fileList');
-  resultListEl = $('#resultList');
-
-  progressBar = $('#progressBar');
-  progressText = $('#progressText');
-  progressBar2 = $('#progressBar2');
-  progressText2 = $('#progressText2');
-  progressTitle = $('#progressTitle');
-
-  convertBtn = $('#convertBtn');
-  downloadAllBtn = $('#downloadAll');
-  convertMoreBtn = $('#convertMore');
-  browseBtn = $('#browseBtn');
-
-  formatGroupsEl = $('#formatGroups');
-  formatOptionsEl = $('#formatOptions');
-
-  bindUI();
-  initState();
-}
-
-function bindUI(){
-  // drag/drop
-  ['dragenter','dragover'].forEach(ev => dropEl.addEventListener(ev, e=>{
-    e.preventDefault(); e.stopPropagation(); dropEl.classList.add('drag');
-  }));
-  ['dragleave','drop'].forEach(ev => dropEl.addEventListener(ev, e=>{
-    e.preventDefault(); e.stopPropagation(); dropEl.classList.remove('drag');
-  }));
-  dropEl.addEventListener('drop', e=>{
-    const dt = e.dataTransfer;
-    if(dt && dt.files) addFiles(dt.files);
-  });
-  fileInput.addEventListener('change', ()=>{ if(fileInput.files) addFiles(fileInput.files); });
-  browseBtn?.addEventListener('click', ()=> fileInput.click());
-  dropEl.addEventListener('keydown', e=>{
-    if(e.key==='Enter' || e.key===' '){ e.preventDefault(); fileInput.click(); }
-  });
-
-  convertBtn.addEventListener('click', async ()=>{
-    if(!files.length) return toast('Dodaj pliki', 'warn');
-    // rozpocznij
-    showProgressSection();
-    results = [];
-    doneCount = 0;
-    setOverallProgress(0);
-    updateDownloadLink([]);
-    const totalBytes = files.reduce((a,f)=>a+f.size,0);
-    startArtificialProgress(Math.min(25000, Math.max(6000, totalBytes / (512 * KB) * 1200)));
-
-    const cores = navigator.hardwareConcurrency || 4;
-    const concurrency = Math.max(1, Math.min(6, Math.floor(cores/2)));
-    const tasks = files.map(f=>()=> convertFile(f, selectedFormat).finally(()=>{ doneCount++; updateOverallProgress(); }));
-    await runPool(tasks, concurrency);
-    completeArtificialProgress();
-    setProgressPage(100);
-    updateDownloadLink(results);
-    toast('Konwersja zakończona', 'ok');
-  });
-
-  convertMoreBtn.addEventListener('click', ()=>{
-    resetConverterState();
-    // wróć do home (już jesteśmy w home, tylko ukryj postęp)
-    hideProgressSection();
-  });
-}
-
-function initState(){
-  const autoLimit = estimateSafeLimitBytes();
-  const info = $('#limitInfo');
-  if(info){
-    info.innerHTML = `<span class="status">Automatyczny limit: ${humanSize(autoLimit)}</span>`;
-  }
-  buildFormatUI();
-  renderResults();
-  onFilesChanged();
-}
-
-function showProgressSection(){
-  const prog = document.getElementById('page-progress-inner');
-  if(prog) prog.style.display='block';
-}
-function hideProgressSection(){
-  const prog = document.getElementById('page-progress-inner');
-  if(prog) prog.style.display='none';
-}
-
-function buildFormatUI(){
-  if(!formatGroupsEl || !formatOptionsEl) return;
-  formatGroupsEl.innerHTML = '';
-  for(const [key,val] of Object.entries(formatsCatalog)){
-    const btn = document.createElement('button');
-    btn.className='fchip';
-    btn.type='button';
-    btn.setAttribute('role','tab');
-    btn.setAttribute('aria-pressed', key===selectedCategory ? 'true' : 'false');
-    btn.textContent = val.label;
-    btn.addEventListener('click', ()=>{
-      if (btn.hasAttribute('disabled')) return;
-      selectedCategory = key;
-      refreshGroups();
-      buildFormatOptions();
-    });
-    formatGroupsEl.appendChild(btn);
-  }
-  buildFormatOptions();
-  applyCompatibilityLocks();
-}
-
-function refreshGroups(){
-  $$('#formatGroups .fchip').forEach(b=>{
-    b.setAttribute('aria-pressed', b.textContent === formatsCatalog[selectedCategory].label ? 'true' : 'false');
-  });
-}
-
-function buildFormatOptions(){
-  if(!formatOptionsEl) return;
-  formatOptionsEl.innerHTML = '';
-  const list = formatsCatalog[selectedCategory].formats;
-  if(!list.includes(selectedFormat)) selectedFormat = list[0];
-  list.forEach(fmt=>{
-    const opt = document.createElement('button');
-    opt.className='format-option';
-    opt.type='button';
-    opt.setAttribute('role','radio');
-    opt.setAttribute('data-fmt', fmt);
-    opt.setAttribute('aria-checked', fmt===selectedFormat ? 'true' : 'false');
-    opt.textContent = labelMap[fmt] || fmt.toUpperCase();
-    opt.addEventListener('click', ()=>{
-      if(opt.hasAttribute('disabled')) return;
-      selectedFormat = fmt;
-      $$('#formatOptions .format-option').forEach(o=>o.setAttribute('aria-checked','false'));
-      opt.setAttribute('aria-checked','true');
-    });
-    formatOptionsEl.appendChild(opt);
-  });
-  applyCompatibilityLocks();
-}
-
-function currentInputCategory(){
-  if(!files.length) return null;
-  const count = {image:0,audio:0,document:0,video:0,archive:0,code:0};
-  for(const f of files){
-    const ext = (f.name.split('.').pop()||'').toLowerCase();
-    const cat = extToCategory[ext] || 'document';
-    if(count[cat]!==undefined) count[cat]++;
-  }
-  return Object.entries(count).sort((a,b)=>b[1]-a[1])[0][0];
-}
-
-function applyCompatibilityLocks(){
-  if(!formatGroupsEl || !formatOptionsEl) return;
-  const inputCat = currentInputCategory();
-  if(!inputCat){
-    $$('#formatGroups .fchip').forEach(ch=> ch.removeAttribute('disabled'));
-    $$('#formatOptions .format-option').forEach(o=> o.removeAttribute('disabled'));
-    return;
-  }
-  const allowedCats = compatibleCategoryMap[inputCat] || new Set();
-  $$('#formatGroups .fchip').forEach(ch=>{
-    const cat = Object.keys(formatsCatalog).find(k => formatsCatalog[k].label === ch.textContent);
-    if(!cat) return;
-    const allowed = allowedCats.has(cat);
-    if(!allowed){ ch.setAttribute('disabled',''); }
-    else ch.removeAttribute('disabled');
-  });
-  const allowedFormatsSet = perCategoryAllowedFormats[inputCat] || new Set();
-  $$('#formatOptions .format-option').forEach(o=>{
-    const fmt = o.getAttribute('data-fmt');
-    const globallyInCategory = (formatsCatalog[selectedCategory]?.formats || []).includes(fmt);
-    const allowed = globallyInCategory && allowedFormatsSet.has(fmt);
-    if(!allowed){
-      o.setAttribute('disabled','');
-      if(o.getAttribute('aria-checked')==='true'){
-        o.setAttribute('aria-checked','false');
-      }
-    }else{
-      o.removeAttribute('disabled');
-    }
-  });
-  const enabled = $$('#formatOptions .format-option:not([disabled])');
-  if(enabled.length){
-    const stillSelected = enabled.find(o=> o.getAttribute('data-fmt')===selectedFormat);
-    if(!stillSelected){
-      selectedFormat = enabled[0].getAttribute('data-fmt');
-      enabled[0].setAttribute('aria-checked','true');
-    }
-  }
-  if(!allowedCats.has(selectedCategory)){
-    const firstAllowed = Object.keys(formatsCatalog).find(cat => allowedCats.has(cat));
-    if(firstAllowed){
-      selectedCategory = firstAllowed;
-      refreshGroups();
-      buildFormatOptions();
-    }
-  }
-}
-
-function autoCategoryForFiles(fs){
-  if(!fs.length) return 'image';
-  const count = {image:0,audio:0,document:0,video:0,archive:0,code:0};
-  for(const f of fs){
-    const ext = (f.name.split('.').pop() || '').toLowerCase();
-    const cat = extToCategory[ext] || 'document';
-    if(count[cat]!==undefined) count[cat]++;
-  }
-  let best='image', max=-1;
-  for(const k of Object.keys(count)){ if(count[k]>max){ max=count[k]; best=k; } }
-  return best;
-}
-
-function estimateSafeLimitBytes(){
-  const mem = navigator.deviceMemory || 4;
-  const cores = (navigator.hardwareConcurrency || 4);
-  const ua = navigator.userAgent.toLowerCase();
-  const isMobile = /iphone|ipad|android|mobile/.test(ua);
-  let base = Math.min(mem * 5, 50) * GB;
-  if(isMobile) base *= 0.6;
-  if(cores <= 2) base *= 3;
-  base = Math.max(200*MB, Math.min(base, 50*GB));
-  return Math.round(base);
-}
-function humanSize(bytes){
-  const GBb=1024*1024*1024, MBb=1024*1024, KBb=1024;
-  if(bytes >= GBb) return (bytes/GBb).toFixed(2)+' GB';
-  if(bytes >= MBb) return (bytes/MBb).toFixed(1)+' MB';
-  if(bytes >= KBb) return (bytes/KBb).toFixed(1)+' KB';
-  return bytes+' B';
-}
-
-function onFilesChanged(){
-  const settings = document.getElementById('settings-panel');
-  if(settings) settings.style.display = files.length ? 'block' : 'none';
-  applyCompatibilityLocks();
-  renderFileList();
-}
-
-function addFiles(newFiles){
-  const limitBytes = estimateSafeLimitBytes();
-  const currentTotal = files.reduce((a,f)=>a+f.size,0);
-  let addedTotal = 0;
-  for(const f of newFiles){
-    if(files.some(x => x.name===f.name && x.size===f.size)) continue;
-    if(currentTotal + addedTotal + f.size > limitBytes){
-      toast(`Pominięto ${f.name} (przekracza limit)`, 'warn');
-      continue;
-    }
-    files.push(f);
-    addedTotal += f.size;
-  }
-  const detected = autoCategoryForFiles(files);
-  if(detected !== selectedCategory){
-    selectedCategory = detected;
-  }
-  refreshGroups();
-  buildFormatOptions();
-  onFilesChanged();
-}
-
-function renderFileList(){
-  if(!fileListEl) return;
-  fileListEl.innerHTML = '';
-  if(!files.length){
-    fileListEl.innerHTML = '<div class="ghost">Nie dodano jeszcze żadnych plików.</div>';
-    return;
-  }
-  for(const [i,f] of files.entries()){
-    const row = document.createElement('div');
-    row.className='file';
-    row.innerHTML=`
-      <div class="icon"></div>
-      <div class="meta">
-        <b title="${f.name}">${truncate(f.name,38)}</b>
-        <small>${humanSize(f.size)}</small>
-      </div>
-      <div class="act">
-        <span class="status">W kolejce</span>
-        <button class="btn secondary" data-remove="${i}" title="Usuń">Usuń</button>
-      </div>
-    `;
-    fileListEl.appendChild(row);
-  }
-  fileListEl.querySelectorAll('[data-remove]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const idx= +btn.getAttribute('data-remove');
-      files.splice(idx,1);
-      onFilesChanged();
-    });
-  });
-}
-
-function renderResults(){
-  if(!resultListEl) return;
-  resultListEl.innerHTML = '';
-  if(!results.length){
-    resultListEl.innerHTML = '<div class="ghost">Przekonwertowane pliki pojawią się tutaj.</div>';
-    return;
-  }
-  for(const r of results){
-    const row = document.createElement('div');
-    row.className='file';
-    row.innerHTML=`
-      <div class="icon"></div>
-      <div class="meta">
-        <b title="${r.name}">${truncate(r.name,38)}</b>
-        <small>${humanSize(r.blob.size)} • ${r.type}</small>
-      </div>
-      <div class="act">
-        <a class="btn" download="${r.name}">Pobierz</a>
-      </div>
-    `;
-    const a = row.querySelector('a');
-    a.href = URL.createObjectURL(r.blob);
-    resultListEl.appendChild(row);
-  }
-}
-
-function toast(msg, type='ok'){
-  const container = document.getElementById('toast-container');
-  const el = document.createElement('div');
-  el.className='toast';
-  el.textContent=msg;
-  if(type==='warn') el.style.borderColor='orange';
-  if(type==='err') el.style.borderColor='red';
-  container.appendChild(el);
-  setTimeout(()=>{ el.style.opacity='0'; },1600);
-  setTimeout(()=>el.remove(),2000);
-}
 
 function setInlineProgress(p){ if(progressBar && progressText){ progressBar.style.width=p+'%'; progressText.textContent=p+'%'; } }
 function setProgressPage(p){
@@ -439,36 +137,82 @@ async function runPool(tasks, limit){
   let i=0;
   const running = new Set();
   return new Promise(resolve=>{
-    const next = ()=>{
-      if(i>=tasks.length && running.size===0){ resolve(); return; }
-      while(running.size < limit && i < tasks.length){
-        const p = tasks[i++]();
-        running.add(p);
-        p.finally(()=>{ running.delete(p); next(); });
-      }
-    };
+    const next = ()=>
+      Promise.resolve().then(async ()=>{
+        if(i >= tasks.length && !running.size){
+          resolve();
+          return;
+        }
+        while(i < tasks.length && running.size < limit){
+          const idx = i++;
+          const p = tasks[idx]();
+          running.add(p);
+          p.finally(()=>{ running.delete(p); next(); });
+        }
+      });
     next();
   });
 }
 
-async function convertFile(file, fmt){
-  const cat = (extToCategory[(file.name.split('.').pop()||'').toLowerCase()] || selectedCategory);
-  try{
-    let out;
-    if(cat==='image') out = await convertImage(file, fmt);
-    else if(cat==='audio') out = await convertAudio(file, fmt);
-    else if(cat==='document') out = await convertDocument(file, fmt);
-    else if(cat==='video') out = await convertVideo(file, fmt);
-    else if(cat==='archive') out = await convertArchive(file, fmt);
-    else if(cat==='code') out = await convertCode(file, fmt);
-    else out = new Blob([await file.arrayBuffer()], {type: file.type || 'application/octet-stream'});
-    const base = file.name.replace(/\.[^.]+$/,'');
-    const name = `${base}.${suggestExt(fmt, file.name)}`;
-    results.push({name, blob: out, type: out.type || 'application/octet-stream'});
-  }catch(err){
-    console.error(err);
-    toast(`Niepowodzenie: ${file.name}`, 'err');
+function renderFileList(){
+  if(!fileListEl) return;
+  fileListEl.innerHTML = '';
+  for(const f of files){
+    const row = document.createElement('div');
+    row.className='file';
+    row.innerHTML=`
+      <div class="icon"></div>
+      <div class="meta">
+        <b title="${f.name}">${truncate(f.name,38)}</b>
+        <small>${humanSize(f.size)}</small>
+      </div>
+      <div class="act">
+        <button class="btn small" aria-label="Usuń">✕</button>
+      </div>
+    `;
+    row.querySelector('button').addEventListener('click', ()=>{
+      files = files.filter(o=>o!==f);
+      onFilesChanged();
+      renderFileList();
+    });
+    fileListEl.appendChild(row);
   }
+}
+
+function renderResults(){
+  if(!resultListEl) return;
+  resultListEl.innerHTML = '';
+  if(!results.length){
+    resultListEl.innerHTML = '<div class="ghost">Przekonwertowane pliki pojawią się tutaj.</div>';
+    return;
+  }
+  for(const r of results){
+    const row = document.createElement('div');
+    row.className='file';
+    row.innerHTML=`
+      <div class="icon"></div>
+      <div class="meta">
+        <b title="${r.name}">${truncate(r.name,38)}</b>
+        <small>${humanSize(r.blob.size)} • ${r.type}</small>
+      </div>
+      <div class="act">
+        <a class="btn" download="${r.name}">Pobierz</a>
+      </div>
+    `;
+    const a = row.querySelector('a');
+    a.href = URL.createObjectURL(r.blob);
+    resultListEl.appendChild(row);
+  }
+}
+
+function toast(msg, type='ok'){
+  const container = document.getElementById('toast-container') || document.body;
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(()=>{ el.classList.add('visible'); }, 10);
+  setTimeout(()=>{ el.classList.remove('visible'); setTimeout(()=>el.remove(),300); }, 3000);
 }
 
 function updateDownloadLink(items){
@@ -498,46 +242,9 @@ function updateDownloadLink(items){
   });
   const pack=new Blob(parts, {type:'application/octet-stream'});
   const url=URL.createObjectURL(pack);
-  const filename=`${nameBase}.tar`;
   downloadAllBtn.href=url;
-  downloadAllBtn.setAttribute('download', filename);
-  downloadAllBtn.textContent='Pobierz .tar';
-}
-
-function suggestPackBaseName(items){
-  if(!items.length) return 'converted';
-  const base=commonPrefix(items.map(i=>i.name.replace(/\.[^.]+$/,''))).trim();
-  if(base && base.length>=3) return base+'-converted';
-  return 'converted';
-}
-function commonPrefix(arr){
-  if(!arr.length) return '';
-  let p=arr[0];
-  for(let i=1;i<arr.length;i++){
-    let j=0; const s=arr[i];
-    while(j<p.length && j<s.length && p[j]===s[j]) j++;
-    p=p.slice(0,j);
-    if(!p) break;
-  }
-  return p.replace(/[-_. ]+$/,'');
-}
-function suggestExt(fmt, originalName){
-  const map = {
-    'pdf-lite':'pdf','gif-lite':'gif','webm-lite':'webm','png-8':'png',
-    'jpeg-low':'jpg','rtf-lite':'rtf','zip-lite':'zip','tar-lite':'tar',
-    'thumb-webp':'webp','svg-lite':'svg','bmp-lite':'bmp','ico-lite':'ico',
-    'html-lite':'html','ndjson-lite':'ndjson'
-  };
-  const ext=map[fmt] || fmt.toLowerCase();
-  const oext=(originalName.split('.').pop()||'').toLowerCase();
-  if(ext===oext) return ext;
-  return ext;
-}
-function truncate(str,n){
-  if(str.length<=n) return str;
-  const ext=(str.includes('.')?'.'+str.split('.').pop():'');
-  const base=str.slice(0, Math.max(0, n - ext.length -1));
-  return base+'…'+ext;
+  downloadAllBtn.setAttribute('download', `${nameBase}.tar`);
+  downloadAllBtn.textContent='Pobierz wszystkie';
 }
 
 function resetConverterState(){
@@ -551,59 +258,191 @@ function resetConverterState(){
   onFilesChanged();
 }
 
-function resetProgressPage(){
-  if(progressBar2) progressBar2.style.width = '0%';
-  if(progressText2) progressText2.textContent = '0%';
-  if(progressTitle) progressTitle.textContent = 'Pracujemy nad Twoimi plikami…';
-  if(downloadAllBtn){
-    downloadAllBtn.classList.add('disabled');
-    downloadAllBtn.setAttribute('aria-disabled','true');
-    downloadAllBtn.removeAttribute('href');
-    downloadAllBtn.removeAttribute('download');
-    downloadAllBtn.textContent = 'Pobierz';
+function currentInputCategory(){
+  if(!files.length) return null;
+  const count = {image:0,audio:0,document:0,video:0,archive:0,code:0};
+  for(const f of files){
+    const ext = (f.name.split('.').pop()||'').toLowerCase();
+    const cat = extToCategory[ext] || 'document';
+    if(count[cat]!==undefined) count[cat]++;
+  }
+  return Object.entries(count).sort((a,b)=>b[1]-a[1])[0][0];
+}
+
+function applyCompatibilityLocks(){
+  if(!formatGroupsEl || !formatOptionsEl) return;
+  const inputCat = currentInputCategory();
+  if(!inputCat){
+    $$('#formatGroups .fchip').forEach(ch=> ch.removeAttribute('disabled'));
+    $$('#formatOptions .format-option').forEach(o=> o.removeAttribute('disabled'));
+    return;
+  }
+  const allowedCats = compatibleCategoryMap[inputCat] || new Set();
+  $$('#formatGroups .fchip').forEach(ch=>{
+    const cat = Object.keys(formatsCatalog).find(k => formatsCatalog[k].label === ch.textContent);
+    if(!cat) return;
+    const allowed = allowedCats.has(cat);
+    if(!allowed){ ch.setAttribute('disabled',''); }
+    else ch.removeAttribute('disabled');
+  });
+  const allowedFormatsSet = perCategoryAllowedFormats[inputCat] || new Set();
+  $$('#formatOptions .format-option').forEach(o=>{
+    const fmt = o.getAttribute('data-fmt');
+    const globallyInCategory = (formatsCatalog[selectedCategory]?.formats || []).includes(fmt);
+    const allowed = globallyInCategory && allowedFormatsSet.has(fmt);
+    if(!allowed) o.setAttribute('disabled','');
+    else o.removeAttribute('disabled');
+  });
+  if(!allowedCats.has(selectedCategory)){
+    const firstAllowed = Object.keys(formatsCatalog).find(cat => allowedCats.has(cat));
+    if(firstAllowed){
+      selectedCategory = firstAllowed;
+      refreshGroups();
+      buildFormatOptions();
+    }
   }
 }
 
+function autoCategoryForFiles(fs){
+  if(!fs.length) return 'image';
+  const count = {image:0,audio:0,document:0,video:0,archive:0,code:0};
+  for(const f of fs){
+    const ext = (f.name.split('.').pop()||'').toLowerCase();
+    const cat = extToCategory[ext] || 'document';
+    if(count[cat]!==undefined) count[cat]++;
+  }
+  return Object.entries(count).sort((a,b)=>b[1]-a[1])[0][0];
+}
 
-function initRoutingHook(){
-  // czekaj na zmianę strony, żeby zainicjalizować UI przy ładowaniu home
-  window.addEventListener('page-changed', e=>{
-    if(e.detail==='home'){
-      // gdy fragment home załadowany, zainicjalizuj
-      setTimeout(()=>{ // daj chwilę na DOM
-        setupAfterLoad();
-      }, 0);
+function buildFormatUI(){
+  if(!formatGroupsEl || !formatOptionsEl) return;
+  formatGroupsEl.innerHTML = '';
+  for(const [key,val] of Object.entries(formatsCatalog)){
+    const btn = document.createElement('button');
+    btn.className='fchip';
+    btn.type='button';
+    btn.setAttribute('role','tab');
+    btn.setAttribute('aria-pressed', key===selectedCategory ? 'true' : 'false');
+    btn.textContent = val.label;
+    btn.addEventListener('click', ()=>{
+      if (btn.hasAttribute('disabled')) return;
+      selectedCategory = key;
+      refreshGroups();
+      buildFormatOptions();
+    });
+    formatGroupsEl.appendChild(btn);
+  }
+  buildFormatOptions();
+  applyCompatibilityLocks();
+}
+
+function buildFormatOptions(){
+  if(!formatOptionsEl) return;
+  formatOptionsEl.innerHTML = '';
+  const list = formatsCatalog[selectedCategory].formats;
+  if(!list.includes(selectedFormat)) selectedFormat = list[0];
+  list.forEach(fmt=>{
+    const opt = document.createElement('button');
+    opt.className='format-option';
+    opt.type='button';
+    opt.setAttribute('role','radio');
+    opt.setAttribute('data-fmt', fmt);
+    opt.setAttribute('aria-checked', fmt===selectedFormat ? 'true' : 'false');
+    opt.textContent = labelMap[fmt] || fmt.toUpperCase();
+    opt.addEventListener('click', ()=>{
+      if(opt.hasAttribute('disabled')) return;
+      selectedFormat = fmt;
+      $$('#formatOptions .format-option').forEach(o=>o.setAttribute('aria-checked','false'));
+      opt.setAttribute('aria-checked','true');
+    });
+    formatOptionsEl.appendChild(opt);
+  });
+  applyCompatibilityLocks();
+}
+
+function refreshGroups(){
+  $$('#formatGroups .fchip').forEach(ch=>{
+    if(ch.textContent === formatsCatalog[selectedCategory].label){
+      ch.setAttribute('aria-pressed','true');
+    } else {
+      ch.removeAttribute('aria-pressed');
     }
   });
 }
 
-// start
-initRoutingHook();
-
-// --- (na górze pliku: importy i wcześniejsza część pozostają bez zmian) ---
-
-// Dodaj nową pomocniczą funkcję:
-function resetHome(){
-  files = [];
-  results = [];
+function addFiles(list){
+  for(const f of list){
+    if(!f.name) continue;
+    files.push(f);
+  }
+  onFilesChanged();
   renderFileList();
-  renderResults();
-  onFilesChanged(); // ukryje panel ustawień gdy nie ma plików
-  setOverallProgress(0);
-  resetProgressPage();
-}
-// Proste przełączenie między „page” sekcjami
-async function transitionPage(current, target) {
-  if (!current || !target) return;
-  current.classList.remove('active');
-  target.classList.add('active');
 }
 
-// Zmodyfikuj navigate, żeby przy wejściu na home zresetować jeśli pochodzi z innej strony:
+function onFilesChanged(){
+  const wrap = document.getElementById('formatWrapper') || document.getElementById('settings-panel');
+  if(!wrap) return;
+  if(files.length){
+    wrap.style.display='block';
+  }else{
+    wrap.style.display='none';
+  }
+}
+
+function suggestPackBaseName(items){
+  if(!items.length) return 'converted';
+  if(items.length===1) return items[0].name.replace(/\.[^/.]+$/, '');
+  return 'converted-pack';
+}
+
+async function convertFile(file, fmt){
+  const cat = (extToCategory[(file.name.split('.').pop()||'').toLowerCase()] || selectedCategory);
+  try{
+    let out;
+    if(cat==='image') out = await convertImage(file, fmt);
+    else if(cat==='audio') out = await convertAudio(file, fmt);
+    else if(cat==='document') out = await convertDocument(file, fmt);
+    else if(cat==='video') out = await convertVideo(file, fmt);
+    else if(cat==='archive') out = await convertArchive(file, fmt);
+    else if(cat==='code') out = await convertCode(file, fmt);
+    else out = new Blob([await file.arrayBuffer()], {type: file.type || 'application/octet-stream'});
+    const base = file.name.replace(/\.[^.]+$/,'');
+    const name = `${base}.${suggestExt(fmt, file.name)}`;
+    results.push({name, blob: out, type: out.type || 'application/octet-stream'});
+  }catch(err){
+    console.error(err);
+    toast(`Niepowodzenie: ${file.name}`, 'err');
+  }
+}
+
+function deriveName(orig, fmt){
+  const base = orig.replace(/\.[^/.]+$/, '');
+  return `${base}.${fmt.replace(/-lite/, '')}`;
+}
+
+function estimateSafeLimitBytes(){
+  const mem = navigator.deviceMemory || 4;
+  const cores = navigator.hardwareConcurrency || 4;
+  const ua = navigator.userAgent || '';
+  const isMobile = /Mobi|Android/i.test(ua);
+  let base = Math.min(mem * 5, 50) * GB;
+  if(isMobile) base *= 0.6;
+  if(cores <= 2) base *= 3;
+  base = Math.max(200*MB, Math.min(base, 50*GB));
+  return Math.round(base);
+}
+
+function humanSize(bytes){
+  const GBb=1024*1024*1024, MBb=1024*1024, KBb=1024;
+  if(bytes >= GBb) return (bytes/GBb).toFixed(2)+' GB';
+  if(bytes >= MBb) return (bytes/MBb).toFixed(1)+' MB';
+  if(bytes >= KBb) return (bytes/KBb).toFixed(1)+' KB';
+  return bytes+' B';
+}
+
 async function navigate(route){
   const current = document.querySelector('.page.active');
   const target = document.getElementById('page-'+route);
-  // update chips
   $$('.chip[data-route]').forEach(c=>{
     if(c.getAttribute('data-route')===route){
       c.classList.add('active');
@@ -613,18 +452,100 @@ async function navigate(route){
       c.removeAttribute('aria-current');
     }
   });
-  // jeśli ktoś przechodzi na home przez nawigację - zresetuj
   if(route === 'home'){
     resetHome();
   }
-  // perform animated switch
   await transitionPage(current, target);
   try{ history.replaceState({}, '', '#'+route); }catch{}
 }
 
 // Zmieniony handler dla przycisku "Wróć":
 convertMoreBtn.addEventListener('click', ()=>{
-  resetHome(); // usuń pliki, wyniki, progress
+  resetHome(); // usuń pliki, wyniki, progres
   navigate('home');
   applyCompatibilityLocks();
 });
+
+function bindUI(){
+  ['dragenter','dragover'].forEach(ev => dropEl.addEventListener(ev, e=>{
+    e.preventDefault(); e.stopPropagation(); dropEl.classList.add('drag');
+  }));
+  ['dragleave','drop'].forEach(ev => dropEl.addEventListener(ev, e=>{
+    e.preventDefault(); e.stopPropagation(); dropEl.classList.remove('drag');
+  }));
+  dropEl.addEventListener('drop', e=>{
+    const dt = e.dataTransfer;
+    if(dt && dt.files) addFiles(dt.files);
+  });
+  fileInput.addEventListener('change', ()=>{ if(fileInput.files) addFiles(fileInput.files); });
+  browseBtn?.addEventListener('click', ()=> fileInput.click());
+  dropEl.addEventListener('keydown', e=>{
+    if(e.key==='Enter' || e.key===' '){ e.preventDefault(); fileInput.click(); }
+  });
+
+  // kategorie
+  formatGroupsEl.innerHTML = '';
+  for(const [key,val] of Object.entries(formatsCatalog)){
+    const btn = document.createElement('button');
+    btn.className='fchip';
+    btn.setAttribute('role','tab');
+    btn.setAttribute('data-key', key);
+    btn.setAttribute('aria-pressed', key===selectedCategory ? 'true' : 'false');
+    btn.textContent = val.label;
+    btn.addEventListener('click', ()=>{
+      if (btn.hasAttribute('disabled')) return;
+      selectedCategory = key;
+      refreshGroups();
+      buildFormatOptions();
+    });
+    formatGroupsEl.appendChild(btn);
+  }
+  buildFormatOptions();
+  applyCompatibilityLocks();
+}
+
+function initState(){
+  const autoLimit = estimateSafeLimitBytes();
+  const info = $('#limitInfo');
+  if(info){
+    info.innerHTML = `<span class="status">Automatyczny limit: ${humanSize(autoLimit)}</span>`;
+  }
+  buildFormatUI();
+  renderResults();
+  onFilesChanged();
+}
+
+function initRoutingHook(){
+  window.addEventListener('page-changed', e=>{
+    if(e.detail==='home'){
+      // przy wejściu na home, domyślnie już resetHome zrobi swoje
+    }
+  });
+}
+
+function setupAfterLoad(){
+  dropEl = $('#drop');
+  fileInput = $('#fileInput');
+  fileListEl = $('#fileList');
+  resultListEl = $('#resultList');
+  progressBar = $('#progressBar');
+  progressText = $('#progressText');
+  progressBar2 = $('#progressBar2');
+  progressText2 = $('#progressText2');
+  progressTitle = $('#progressTitle');
+
+  convertBtn = $('#convertBtn');
+  downloadAllBtn = $('#downloadAll');
+  convertMoreBtn = $('#convertMore');
+  browseBtn = $('#browseBtn');
+
+  formatGroupsEl = $('#formatGroups');
+  formatOptionsEl = $('#formatOptions');
+
+  bindUI();
+  initState();
+  initRoutingHook();
+  applyCompatibilityLocks();
+}
+
+window.addEventListener('DOMContentLoaded', setupAfterLoad);
