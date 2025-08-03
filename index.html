@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>File Tool — DARMOWY Konwerter plików online | Konwersja lokalnie</title>
-  <meta name="description" content="Filetool to prywatny konwert...nwertuj obrazy, audio, dokumenty i wideo bez wysyłania plików.">
+  <meta name="description" content="Filetool to prywatny konwerter plików działający całkowicie w przeglądarce. Konwertuj obrazy, audio, dokumenty i wideo bez wysyłania plików.">
   <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1">
   <link rel="icon" href="#" id="dynamic-favicon">
   <link rel="stylesheet" href="style/style.css" />
@@ -14,21 +14,26 @@
 
   <header class="nav" role="navigation" aria-label="Nawigacja główna">
     <div class="brand">
-      <a href="#" class="logo" aria-label="Filetool">
-        <div class="mark"></div>
-        <div class="text">Filetool</div>
-      </a>
+      <div class="logo" aria-hidden="true"></div>
+      <span>File Tool</span>
     </div>
-    <div class="spacer"></div>
-    <div class="links">
-      <button class="chip" data-route="home">Home</button>
-      <button class="chip" data-route="about">O projekcie</button>
-      <button class="chip" data-route="security">Bezpieczeństwo</button>
-    </div>
+    <nav class="links" aria-label="Linki">
+      <a class="chip" data-route="home" aria-current="page">Konwerter</a>
+      <a class="chip" data-route="about">O projekcie</a>
+      <a class="chip" data-route="security">Bezpieczeństwo</a>
+    </nav>
   </header>
 
-  <main class="shell">
-    <div class="content-grid">
+  <main class="container">
+    <div class="app">
+      <section class="hero">
+        <h1>DARMOWY Konwerter plików FileTool</h1>
+        <p>Konwertuj obrazy, audio, dokumenty, archiwa i wideo bezpośrednio w przeglądarce. Zero wysyłania plików — pełna prywatność.</p>
+        <p class="ghost" style="margin-top:6px">Szybka i bezpieczna konwersja online • 100% lokalnie • Bez konta</p>
+        <p class="ghost" style="margin-top:6px">Obsługiwane formaty: PNG, JPG, WebP, AVIF, GIF, MP4, WebM, WAV, MP3, TXT, MD, PDF, JSON, CSV i inne.</p>
+      </section>
+
+      <!-- KONWERTER -->
       <section class="page active" id="page-home" aria-label="Konwerter">
         <div id="home-grid">
           <section class="panel" aria-label="Przesyłanie">
@@ -57,9 +62,18 @@
               <div class="convert-wrap">
                 <button id="convertBtn" class="btn" aria-label="Rozpocznij konwersję">Konwertuj</button>
               </div>
+              <div class="row" id="inline-progress-row" style="margin-top:6px">
+                <div class="prog" style="flex:1"><i id="progressBar" style="width:0%"></i></div>
+                <span id="progressText" style="min-width:110px; text-align:right">0%</span>
+                <button id="clearBtn" class="btn secondary" aria-label="Wyczyść listę">Wyczyść</button>
+              </div>
             </div>
           </section>
 
+          <section class="panel" id="results-section" aria-label="Wyniki">
+            <div class="title"><span class="dot"></span> Wyniki</div>
+            <div class="file-list" id="resultList"></div>
+          </section>
         </div>
       </section>
 
@@ -77,7 +91,7 @@
               <a id="downloadAll" class="btn disabled" aria-disabled="true" download>Pobierz</a>
               <button id="convertMore" class="btn secondary">Wróć</button>
             </div>
-            <div class="ghost" id="progressHint">Pozostaw kartę ... się lokalnie. Po pobraniu możesz wrócić i zacząć od nowa.</div>
+            <div class="ghost" id="progressHint">Pozostaw kartę otwartą — konwersja odbywa się lokalnie. Po pobraniu możesz wrócić i zacząć od nowa.</div>
           </div>
         </section>
       </section>
@@ -87,7 +101,7 @@
         <div class="content-grid">
           <div class="panel">
             <div class="title"><span class="dot"></span> O Filetool</div>
-            <p>Filetool to prywatny konwerter plików działający ...odbywa się lokalnie — żadne pliki nie opuszczają urządzenia.</p>
+            <p>Filetool to prywatny konwerter plików działający w przeglądarce. Wszystko odbywa się lokalnie — żadne pliki nie opuszczają urządzenia.</p>
             <p>Prosty workflow: prześlij plik, ustaw format i konwertuj. Wynik pobierzesz na stronie postępu.</p>
           </div>
           <div class="panel">
@@ -105,17 +119,27 @@
       <section class="page" id="page-security" aria-label="Bezpieczeństwo">
         <div class="content-grid">
           <div class="panel">
-            <div class="title"><span class="dot"></span> Polityka prywatności</div>
-            <p>Brak przesyłania plików. Wszystko działa lokalnie w przeglądarce.</p>
+            <div class="title"><span class="dot"></span> Bezpieczeństwo i prywatność</div>
+            <ul>
+              <li>Pliki nie opuszczają urządzenia — wszystko dzieje się w przeglądarce.</li>
+              <li>Brak kont, brak śledzenia.</li>
+              <li>Adaptacyjne limity pamięci i zasobów dla stabilności.</li>
+              <li>Piaskownica przeglądarki — brak dodatkowych uprawnień.</li>
+            </ul>
           </div>
           <div class="panel">
-            <div class="title"><span class="dot"></span> Bezpieczeństwo</div>
-            <p>Żadne dane nie są wysyłane, nie ma logowania, wszystko wykonuje się po stronie klienta.</p>
+            <div class="title"><span class="dot"></span> Regulaminy i kontakt</div>
+            <h4>Polityka prywatności</h4>
+            <p>Nie zbieramy żadnych danych osobowych. Wszystkie konwersje odbywają się lokalnie.</p>
+            <h4>Regulamin</h4>
+            <p>Używasz narzędzia na własną odpowiedzialność. Nie ponosimy odpowiedzialności za treści przetwarzane przez użytkownika.</p>
+            <h4>Kontakt</h4>
+            <p>Jeśli masz pytania, wyślij wiadomość na: <a href="mailto:kontakt@example.com" style="color:inherit; text-decoration:underline;">kontakt@example.com</a></p>
           </div>
         </div>
       </section>
 
-      <footer class="footer">
+      <footer>
         <span>Działa w 100% lokalnie • Brak wysyłania plików</span>
         <span>Prosty interfejs: najpierw prześlij • potem wybierz • konwertuj</span>
       </footer>
@@ -138,7 +162,7 @@
       ctx.font = 'bold 20px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
       ctx.fillText('F', 32, 34);
       const link = document.getElementById('dynamic-favicon');
-      if(link) link.href = c.toDataURL('image/png');
+      link.href = c.toDataURL('image/png');
     })();
   </script>
 
