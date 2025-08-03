@@ -18,7 +18,7 @@
       <span>File Tool</span>
     </div>
     <nav class="links" aria-label="Linki">
-      <a class="chip" data-route="home" aria-current="page">Konwerter</a>
+      <a class="chip active" data-route="home" aria-current="page">Konwerter</a>
       <a class="chip" data-route="about">O projekcie</a>
       <a class="chip" data-route="security">Bezpieczeństwo</a>
     </nav>
@@ -62,17 +62,7 @@
               <div class="convert-wrap">
                 <button id="convertBtn" class="btn" aria-label="Rozpocznij konwersję">Konwertuj</button>
               </div>
-              <div class="row" id="inline-progress-row" style="margin-top:6px">
-                <div class="prog" style="flex:1"><i id="progressBar" style="width:0%"></i></div>
-                <span id="progressText" style="min-width:110px; text-align:right">0%</span>
-                <button id="clearBtn" class="btn secondary" aria-label="Wyczyść listę">Wyczyść</button>
-              </div>
             </div>
-          </section>
-
-          <section class="panel" id="results-section" aria-label="Wyniki">
-            <div class="title"><span class="dot"></span> Wyniki</div>
-            <div class="file-list" id="resultList"></div>
           </section>
         </div>
       </section>
@@ -108,7 +98,7 @@
             <div class="title"><span class="dot"></span> Dlaczego warto</div>
             <ul>
               <li>Prywatność: nic nie trafia do chmury.</li>
-              <li>Bezpieczeństwo: bez logowania, bez zewnętrznych serwerów.</li>
+              <li>Bezpieczeństwo: brak logowania, bez zewnętrznych serwerów.</li>
               <li>Wydajność: brak uploadu, szybkie działanie.</li>
             </ul>
           </div>
@@ -162,7 +152,7 @@
       ctx.font = 'bold 20px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
       ctx.fillText('F', 32, 34);
       const link = document.getElementById('dynamic-favicon');
-      link.href = c.toDataURL('image/png');
+      if(link) link.href = c.toDataURL('image/png');
     })();
   </script>
 
@@ -178,3 +168,4 @@
   <script type="module" src="konwerter/core.js"></script>
 </body>
 </html>
+
