@@ -3,11 +3,12 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>File Tool — DARMOWY Konwerter plików online | Bezpieczna konwersja w przeglądarce</title>
-<meta name="description" content="Filetool to szybki, darmowy i bezpieczny konwerter plików online. Konwertuj obrazy, audio, dokumenty i wideo lokalnie w przeglądarce. Bez wysyłania plików na serwer.">
+<title>File Tool — DARMOWY Konwerter plików online | Konwersja obrazów, audio, dokumentów i wideo lokalnie</title>
+<meta name="description" content="Filetool to szybki, darmowy i bezpieczny konwerter plików online. Konwertuj obrazy, audio, dokumenty, archiwa i wideo lokalnie w przeglądarce — bez wysyłania plików na serwer. Obsługa: PNG, JPG, WebP, AVIF, PDF, TXT, MD, CSV, JSON, MP3, WAV, OGG, FLAC, MP4, WebM, GIF i więcej.">
 <link rel="canonical" href="https://filetool.pl">
 <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1">
-<meta name="keywords" content="konwerter plików, konwerter obrazów, konwersja audio, pdf online, webp, avif, webm, konwersja dokumentów, konwersja wideo, offline, prywatność">
+<meta name="keywords" content="konwerter plików, konwerter obrazów, konwersja audio, pdf online, webp, avif, webm, docx do pdf, jpg do png, wav do mp3, kompresja zdjęć, przeglądarkowy konwerter, bezpieczna konwersja, offline, prywatność, csv do xlsx, markdown do pdf, mp4 do webm, gif tworzenie, zip online, tar, md do html">
+<link rel="icon" href="#" id="dynamic-favicon">
 <style>
   :root{
     --bg1: 225 70% 3%;
@@ -56,8 +57,6 @@
     to{transform: translate3d(2vmax,-2vmax,0) rotate(8deg)}
   }
 
-  .wrap{min-height:100%;display:grid;grid-template-rows:auto 1fr auto}
-
   .nav{
     position: sticky; top:0; z-index:10;
     display:flex; align-items:center; gap:14px;
@@ -70,8 +69,14 @@
   .brand{display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:.3px}
   .logo{
     width:28px; height:28px; border-radius:8px;
-    background: radial-gradient(circle at 30% 30%, hsl(var(--accent)), hsl(var(--accent-2)));
-    box-shadow: 0 4px 18px hsl(var(--accent)/.35);
+    background: conic-gradient(from 210deg, hsl(var(--accent)), hsl(var(--accent-2)), hsl(160 100% 50%), hsl(var(--accent)));
+    position: relative;
+    box-shadow: 0 6px 24px hsl(var(--accent)/.35), inset 0 0 0 1px hsl(0 0% 100%/.25);
+  }
+  .logo::after{
+    content:""; position:absolute; inset:4px; border-radius:6px;
+    background: radial-gradient(circle at 30% 30%, #fff6, transparent 60%);
+    mix-blend-mode: overlay;
   }
   .nav .links{display:flex; gap:10px; flex-wrap:wrap; margin-left:auto}
   .chip{
@@ -117,9 +122,6 @@
     box-shadow: 0 0 22px hsl(var(--accent)/.8), 0 0 4px 1px hsl(0 0% 100% / .2) inset;
   }
 
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  @media (max-width: 880px){ .grid{grid-template-columns: 1fr} }
-
   .drop{
     position: relative;border: 1px dashed hsl(0 0% 100% / .25);
     border-radius: var(--radius);padding: clamp(14px, 2.2vw, 24px);min-height: 200px;
@@ -146,76 +148,14 @@
   .btn:active{ transform: translateY(1px); filter: saturate(120%) }
   .btn.secondary{ background: linear-gradient(180deg, hsl(0 0% 100% / .09), hsl(0 0% 100% / .04)); color: hsl(0 0% 98%) }
   .row{display:flex; gap:10px; flex-wrap: wrap; align-items:center}
-  .spacer{flex:1}
-  .select, .number, .checkbox{display:grid; gap:6px}
-  label{font-size: 12px; letter-spacing:.2px; opacity:.9}
-  select, input[type="number"]{
-    width:100%; padding: 12px 14px; border-radius: 12px;
-    border: 1px solid hsl(0 0% 100% / .15);
-    background: linear-gradient(180deg, hsl(0 0% 100% / .11), hsl(0 0% 100% / .05));
-    color: white; outline:none; backdrop-filter: blur(6px);
-  }
-  option{ color: black }
-  .limits{display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:12px; opacity:.9}
-  .pill{
-    padding: 6px 10px; border-radius: 999px;
-    border: 1px solid hsl(0 0% 100% / .18);
-    background: linear-gradient(180deg, hsl(0 0% 100% / .12), hsl(0 0% 100% / .06));
-  }
-  .prog{
-    --p:0%; height: 12px; border-radius: 999px; background: hsl(0 0% 100% / .08);
-    border: 1px solid hsl(0 0% 100% / .12); overflow:hidden;
-  }
-  .prog > i{
-    display:block; height:100%; width: var(--p);
-    background: linear-gradient(90deg, hsl(var(--accent)), hsl(var(--accent-2)));
-    box-shadow: 0 0 20px hsl(var(--accent)/.55);
-    transition: width .2s linear;
-  }
-  .file-list{display:grid; gap:10px; margin-top:6px; max-height: 240px; overflow:auto; padding-right:4px}
-  .file{
-    display:grid; grid-template-columns: auto 1fr auto; gap:10px; align-items:center;
-    padding:10px 12px; border-radius: 12px;
-    background: linear-gradient(180deg, hsl(0 0% 100% / .10), hsl(0 0% 100% / .05));
-    border: 1px solid hsl(0 0% 100% / .15);
-  }
-  .file .icon{
-    width:34px; height:34px; border-radius:10px; flex:none;
-    background: radial-gradient(circle at 30% 30%, hsl(var(--accent)/.9), hsl(var(--accent-2)/.8));
-    box-shadow: 0 6px 18px hsl(var(--accent)/.35);
-  }
-  .file .meta{display:flex; flex-direction:column; gap:2px}
-  .file .meta b{ font-size:14px }
-  .file .meta small{ opacity:.85 }
-  .file .act{display:flex; gap:8px; align-items:center}
-  .status{font-size:12px; padding:6px 8px; border-radius:999px; border: 1px solid hsl(0 0% 100% / .18)}
-  .ok{ background: hsl(var(--ok)/.15); border-color: hsl(var(--ok)/.35) }
-  .warn{ background: hsl(var(--warn)/.15); border-color: hsl(var(--warn)/.35) }
-  .err{ background: hsl(var(--err)/.15); border-color: hsl(var(--err)/.35) }
-  .ghost{ opacity:.65 }
+
   footer{display:flex; justify-content:center; gap:10px; flex-wrap:wrap; opacity:.9; font-size:12px; padding: 6px 0 24px}
 
   .page{ display:none }
   .page.active{ display:block }
-  .content-grid{display:grid; gap:16px; grid-template-columns: 1.1fr 1fr}
-  @media (max-width: 980px){ .content-grid{grid-template-columns: 1fr} }
-  .kpi{display:grid; grid-template-columns: repeat(3, 1fr); gap:10px}
-  @media (max-width: 560px){ .kpi{grid-template-columns: 1fr 1fr} }
-  .kpi .panel{ text-align:center; padding:18px }
 
-  #home-grid{ display:grid; gap:24px }
-  @media (max-width:640px){ .row{ gap:8px } .btn{ padding:12px 16px } select, input[type="number"]{ font-size:16px } }
-
-  #page-progress .progress-wrap{display:grid; gap:14px}
-  .big-title{font-weight:800; font-size: clamp(20px, 4.6vw, 28px)}
-  .btn-row{ display:flex; gap:10px; flex-wrap:wrap }
-
-  .format-selector{
-    display:grid; gap:10px;
-  }
-  .format-groups{
-    display:flex; gap:8px; flex-wrap:wrap; justify-content:center;
-  }
+  .format-selector{ display:grid; gap:10px; }
+  .format-groups{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
   .fchip{
     border-radius: 999px; padding:8px 12px; cursor:pointer;
     border:1px solid hsl(0 0% 100%/.18);
@@ -243,17 +183,56 @@
     border-color: transparent;
     box-shadow: 0 8px 20px hsl(var(--accent)/.25);
   }
+  .convert-wrap{ display:grid; place-items:center; margin-top:8px; }
+  #convertBtn{ font-size: clamp(16px, 2.6vw, 18px); padding: 16px 28px; min-width: 240px; }
 
-  .convert-wrap{
-    display:grid; place-items:center; margin-top:8px;
+  /* SEO sections */
+  .content-grid{display:grid; gap:16px; grid-template-columns: 1.1fr 1fr}
+  @media (max-width: 980px){ .content-grid{grid-template-columns: 1fr} }
+  .kpi{display:grid; grid-template-columns: repeat(3, 1fr); gap:10px}
+  @media (max-width: 560px){ .kpi{grid-template-columns: 1fr 1fr} }
+  .kpi .panel{ text-align:center; padding:18px }
+
+  /* Progress page */
+  #page-progress .progress-wrap{display:grid; gap:14px}
+  .big-title{font-weight:800; font-size: clamp(20px, 4.6vw, 28px)}
+  .btn-row{ display:flex; gap:10px; flex-wrap:wrap }
+  .prog{
+    --p:0%; height: 12px; border-radius: 999px; background: hsl(0 0% 100% / .08);
+    border: 1px solid hsl(0 0% 100% / .12); overflow:hidden;
   }
-  #convertBtn{
-    font-size: clamp(16px, 2.6vw, 18px);
-    padding: 16px 28px;
-    min-width: 240px;
+  .prog > i{
+    display:block; height:100%; width: var(--p);
+    background: linear-gradient(90deg, hsl(var(--accent)), hsl(var(--accent-2)));
+    box-shadow: 0 0 20px hsl(var(--accent)/.55);
+    transition: width .2s linear;
   }
 
-  .old-controls{ display:none !important }
+  /* Layout helpers */
+  #home-grid{ display:grid; gap:24px; }
+  .ghost{ opacity:.7 }
+  .file-list{display:grid; gap:10px; margin-top:6px; max-height: 240px; overflow:auto; padding-right:4px}
+  .file{
+    display:grid; grid-template-columns: auto 1fr auto; gap:10px; align-items:center;
+    padding:10px 12px; border-radius: 12px;
+    background: linear-gradient(180deg, hsl(0 0% 100% / .10), hsl(0 0% 100% / .05));
+    border: 1px solid hsl(0 0% 100% / .15);
+  }
+  .file .icon{
+    width:34px; height:34px; border-radius:10px; flex:none;
+    background: radial-gradient(circle at 30% 30%, hsl(var(--accent)/.9), hsl(var(--accent-2)/.8));
+    box-shadow: 0 6px 18px hsl(var(--accent)/.35);
+  }
+  .file .meta{display:flex; flex-direction:column; gap:2px}
+  .file .meta b{ font-size:14px }
+  .file .meta small{ opacity:.85 }
+  .status{font-size:12px; padding:6px 8px; border-radius:999px; border: 1px solid hsl(0 0% 100% / .18)}
+  .ok{ background: hsl(var(--ok)/.15); border-color: hsl(var(--ok)/.35) }
+  .warn{ background: hsl(var(--warn)/.15); border-color: hsl(var(--warn)/.35) }
+  .err{ background: hsl(var(--err)/.15); border-color: hsl(var(--err)/.35) }
+
+  /* Hide main inline progress / results / clear per request */
+  #inline-progress-row, #results-section, #clearBtn { display:none !important; }
 </style>
 
 <script type="importmap">
@@ -284,8 +263,9 @@
 
     <section class="hero">
       <h1>DARMOWY Konwerter plików FileTool</h1>
-      <p>Konwertuj obrazy, audio, dokumenty i wideo bezpośrednio w przeglądarce. Twoje pliki pozostają na urządzeniu i nigdy nie są wysyłane na serwer.</p>
+      <p>Konwertuj obrazy, audio, dokumenty, archiwa i wideo bezpośrednio w przeglądarce. Zero wysyłania plików — pełna prywatność.</p>
       <p class="ghost" style="margin-top:6px">Szybka i bezpieczna konwersja online • 100% lokalnie • Bez konta</p>
+      <p class="ghost" style="margin-top:6px">Obsługiwane formaty: PNG, JPG, JPEG, WebP, AVIF, GIF, MP4, WebM, MOV, WAV, MP3, M4A, OGG, FLAC, TXT, MD, RTF, PDF, CSV, JSON, ZIP (lite) i inne.</p>
     </section>
 
     <section class="page active" id="page-home" aria-label="Konwerter">
@@ -297,67 +277,67 @@
             <div class="big">Przeciągnij i upuść pliki tutaj</div>
             <div class="small">albo</div>
             <div class="btn">Przeglądaj pliki</div>
-            <div class="limits" id="limitInfo">
-              <span class="pill" title="Limit dobierany automatycznie do pamięci i wydajności urządzenia">Automatyczny limit urządzenia</span>
-              <span class="pill">Przetwarzanie po stronie klienta włączone</span>
+            <div class="row" style="justify-content:center; gap:8px; margin-top:6px">
+              <span class="status ok">Lokalna konwersja</span>
+              <span class="status">Brak limitów chmury</span>
+            </div>
+            <div class="row" id="limitInfo" style="justify-content:center; gap:8px; margin-top:6px">
+              <span class="status">Automatyczny limit urządzenia</span>
             </div>
           </div>
           <div class="file-list" id="fileList" aria-live="polite"></div>
         </section>
 
         <section class="panel" aria-label="Ustawienia">
-          <div class="title"><span class="dot"></span> Ustawienia</div>
-
+          <div class="title"><span class="dot"></span> Ustaw format</div>
           <div class="format-selector" aria-label="Wybierz kategorię i format">
             <div class="format-groups" id="formatGroups" role="tablist" aria-label="Kategorie"></div>
             <div class="format-options" id="formatOptions" role="radiogroup" aria-label="Format wyjściowy"></div>
-
             <div class="convert-wrap">
               <button id="convertBtn" class="btn" aria-label="Rozpocznij konwersję">Konwertuj</button>
             </div>
-
-            <div class="row" style="margin-top:6px">
+            <div class="row" id="inline-progress-row" style="margin-top:6px">
               <div class="prog" style="flex:1"><i id="progressBar" style="width:0%"></i></div>
               <span id="progressText" style="min-width:110px; text-align:right">0%</span>
               <button id="clearBtn" class="btn secondary" aria-label="Wyczyść listę">Wyczyść</button>
             </div>
+          </div>
+        </section>
 
-            <div class="old-controls">
-              <div class="row">
-                <div class="number" style="min-width:220px">
-                  <label for="outFormat">Format wyjściowy</label>
-                  <select id="outFormat" aria-label="Format wyjściowy"></select>
-                </div>
-                <div class="number" style="min-width:220px">
-                  <label for="maxSize">Maksymalny łączny rozmiar</label>
-                  <select id="maxSize">
-                    <option value="auto">Auto (bezpieczne dla urządzenia)</option>
-                  </select>
-                </div>
-                <div class="number" style="min-width:220px">
-                  <label for="parallel">Równoległe konwersje</label>
-                  <input id="parallel" type="number" min="1" max="6" value="2" inputmode="numeric">
-                </div>
+        <section class="panel" aria-label="SEO informacje">
+          <div class="title"><span class="dot"></span> Najczęstsze konwersje</div>
+          <div class="content-grid">
+            <div>
+              <ul>
+                <li>JPG do PNG, PNG do WebP, PNG do AVIF — optymalizacja obrazów dla WWW.</li>
+                <li>WAV do MP3, M4A do MP3, OGG do WAV — konwersja dźwięku do popularnych formatów.</li>
+                <li>MP4 do WebM, WebM do MP4, wideo do GIF — szybkie udostępnianie i podglądy.</li>
+                <li>DOCX do PDF (lite via tekst), TXT/MD do PDF/RTF — proste dokumenty w locie.</li>
+                <li>CSV do JSON i JSON do CSV — wymiana danych między narzędziami.</li>
+                <li>ZIP (lite) — szybkie spakowanie zawartości bez serwera.</li>
+              </ul>
+              <p class="ghost">Wszystkie operacje realizowane są lokalnie w przeglądarce przy użyciu standardowych API.</p>
+            </div>
+            <div class="kpi">
+              <div class="panel">
+                <div class="big" style="font-weight:800; font-size:20px">Bez serwera</div>
+                <div class="subtle">Prywatność by design</div>
+              </div>
+              <div class="panel">
+                <div class="big" style="font-weight:800; font-size:20px">Szybko</div>
+                <div class="subtle">Brak uploadu</div>
+              </div>
+              <div class="panel">
+                <div class="big" style="font-weight:800; font-size:20px">Prosto</div>
+                <div class="subtle">Wybierz • Konwertuj</div>
               </div>
             </div>
           </div>
         </section>
 
-        <section class="panel" aria-label="Wyniki">
+        <section class="panel" id="results-section" aria-label="Wyniki">
           <div class="title"><span class="dot"></span> Wyniki</div>
           <div class="file-list" id="resultList"></div>
-
-          <div id="ad-wrapper" style="margin-top:24px; display:flex; justify-content:center;">
-            <ins class="adsbygoogle"
-                 style="display:block; max-width:100%;"
-                 data-ad-client="ca-pub-1712836182508924"
-                 data-ad-slot="6546152427"
-                 data-ad-format="auto"
-                 data-full-width-responsive="true"></ins>
-          </div>
-          <script>
-            try{(adsbygoogle = window.adsbygoogle || []).push({});}catch(e){}
-          </script>
         </section>
       </div>
     </section>
@@ -373,9 +353,9 @@
           </div>
           <div class="btn-row">
             <a id="downloadAll" class="btn" download>Pobierz</a>
-            <button id="convertMore" class="btn secondary">Konwertuj więcej</button>
+            <button id="convertMore" class="btn secondary">Wróć</button>
           </div>
-          <div class="ghost" id="progressHint">Pozostaw kartę otwartą — konwersja odbywa się lokalnie.</div>
+          <div class="ghost" id="progressHint">Pozostaw kartę otwartą — konwersja odbywa się lokalnie. Po pobraniu możesz wrócić i zacząć od nowa.</div>
         </div>
       </section>
     </section>
@@ -384,27 +364,21 @@
       <div class="content-grid">
         <div class="panel">
           <div class="title"><span class="dot"></span> O Filetool</div>
-          <p>Filetool to prywatny, działający na urządzeniu konwerter plików. Działa całkowicie w przeglądarce, używając web API do przetwarzania plików bez ich wysyłania.</p>
-          <p>Stawiamy na bezpieczeństwo, szybkość i dopracowany interfejs. Aplikacja dopasowuje się do możliwości urządzenia, dbając o pamięć i wydajność.</p>
+          <p>Filetool to prywatny, działający na urządzeniu konwerter plików. Działa całkowicie w przeglądarce, używając Web API i opcjonalnie silnika FFmpeg do przetwarzania bez wysyłania danych.</p>
+          <p>Stawiamy na bezpieczeństwo, szybkość i prostotę. Interfejs jest intuicyjny: prześlij plik, wybierz format i kliknij „Konwertuj”. Wynik pobierzesz na osobnej stronie postępu.</p>
           <div class="kpi">
-            <div class="panel">
-              <div class="big" style="font-weight:800; font-size:22px">100% Lokalnie</div>
-              <div class="subtle">Brak wysyłek</div>
-            </div>
-            <div class="panel">
-              <div class="big" style="font-weight:800; font-size:22px">Adaptacyjnie</div>
-              <div class="subtle">Bezpieczne limity</div>
-            </div>
-            <div class="panel">
-              <div class="big" style="font-weight:800; font-size:22px">Otwarcie</div>
-              <div class="subtle">Standardy webowe</div>
-            </div>
+            <div class="panel"><div class="big" style="font-weight:800; font-size:22px">100% Lokalnie</div><div class="subtle">Brak wysyłek</div></div>
+            <div class="panel"><div class="big" style="font-weight:800; font-size:22px">Adaptacyjnie</div><div class="subtle">Bezpieczne limity</div></div>
+            <div class="panel"><div class="big" style="font-weight:800; font-size:22px">Standardy</div><div class="subtle">Web API + FFmpeg</div></div>
           </div>
         </div>
         <div class="panel">
-          <div class="title"><span class="dot"></span> Filozofia</div>
-          <p>Wierzymy, że potężne narzędzia mogą być proste, prywatne i dostępne. Nowoczesne przeglądarki dostarczają fundamentów do przetwarzania mediów, a przemyślany UX sprawia, że działają jak natywne aplikacje.</p>
-          <p>Część konwersji ma charakter „lite” ze względu na ograniczenia webowe, ale pozostaje lokalna i daje szeroką kompatybilność.</p>
+          <div class="title"><span class="dot"></span> Dlaczego warto</div>
+          <ul>
+            <li>Prywatność: nic nie trafia do chmury.</li>
+            <li>Uniwersalność: obsługa popularnych formatów grafiki, audio, wideo i dokumentów.</li>
+            <li>Wydajność: brak uploadu, szybkie działanie.</li>
+          </ul>
         </div>
       </div>
     </section>
@@ -415,15 +389,16 @@
           <div class="title"><span class="dot"></span> Bezpieczeństwo i prywatność</div>
           <ul>
             <li>Pliki nie opuszczają urządzenia. Wszystko dzieje się w przeglądarce.</li>
-            <li>Brak kont.</li>
-            <li>Heurystyki pamięci dbają o responsywność systemu.</li>
-            <li>Brak dodatkowych uprawnień; działamy w piaskownicy przeglądarki.</li>
+            <li>Brak kont i logowania.</li>
+            <li>Heurystyki pamięci dbają o responsywność urządzenia.</li>
+            <li>Piaskownica przeglądarki — brak dodatkowych uprawnień.</li>
           </ul>
         </div>
         <div class="panel">
-          <div class="title"><span class="dot"></span> Wskazówki</div>
+          <div class="title"><span class="dot"></span> Najlepsze praktyki</div>
           <ul>
-            <li>Preferuj nowoczesne formaty (WebP/AVIF dla obrazów, WebM dla wideo) dla mniejszych plików.</li>
+            <li>Wybieraj nowoczesne formaty (WebP/AVIF dla obrazów, WebM dla wideo).</li>
+            <li>Redukuj rozdzielczość/bitrate, by przyspieszyć konwersję na słabszych urządzeniach.</li>
           </ul>
         </div>
       </div>
@@ -433,30 +408,48 @@
       <div class="panel">
         <div class="title"><span class="dot"></span> Szybki start</div>
         <ol>
-          <li>Przeciągnij i upuść pliki do obszaru przesyłania.</li>
-          <li>Wybierz format wyjściowy (aplikacja dobierze odpowiedni na podstawie plików).</li>
-          <li>Kliknij Konwertuj i pobierz po zakończeniu.</li>
+          <li>Przeciągnij i upuść pliki lub wybierz z dysku.</li>
+          <li>Wybierz format wyjściowy.</li>
+          <li>Kliknij „Konwertuj”. Otworzy się strona postępu z paskiem.</li>
+          <li>Po zakończeniu pobierz wynik lub wróć do startu (reset).</li>
         </ol>
       </div>
       <div class="panel">
         <div class="title"><span class="dot"></span> FAQ</div>
-        <p><b>Dlaczego formaty „lite”?</b> Nie wszystkie enkodery są dostępne natywnie w przeglądarce. Zapewniamy lekkie, zgodne standardowo zastępniki.</p>
-        <p><b>Czy pliki są bezpieczne?</b> Tak. Wszystko przetwarzamy lokalnie — nic nie jest wysyłane.</p>
+        <p><b>Czy pliki są wysyłane do Internetu?</b> Nie — przetwarzamy lokalnie.</p>
+        <p><b>Dlaczego niektóre formaty mają dopisek „lite”?</b> To lekkie, zgodne substytuty tworzone w przeglądarce, gdy pełne kodowanie nie jest dostępne.</p>
       </div>
     </section>
 
     <footer>
       <span>Działa w 100% lokalnie • Brak wysyłania plików</span>
-      <span>Optymalizacja dla komputerów, tabletów i telefonów</span>
+      <span>Prosty interfejs: prześlij • wybierz • konwertuj</span>
     </footer>
   </div>
 </main>
 
 <script type="module">
+/* Dynamic favicon (procedurally generated) */
+(function(){
+  const c = document.createElement('canvas');
+  c.width = 64; c.height = 64;
+  const ctx = c.getContext('2d');
+  const g = ctx.createConicGradient(Math.PI*0.6, 32, 32);
+  g.addColorStop(0, '#22d3ee'); g.addColorStop(0.5, '#a78bfa'); g.addColorStop(1, '#22d3ee');
+  ctx.fillStyle = g; ctx.fillRect(0,0,64,64);
+  ctx.fillStyle = 'rgba(255,255,255,.9)';
+  ctx.beginPath();
+  ctx.roundRect(14,14,36,36,8);
+  ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = 3; ctx.stroke();
+  ctx.font = 'bold 20px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('F', 32, 34);
+  const link = document.getElementById('dynamic-favicon');
+  link.href = c.toDataURL('image/png');
+})();
+
 /* FFmpeg loader (non-blocking with timeout + graceful fallback to "lite" modes) */
 let ffmpeg = null, fetchFileFunc = null, ffmpegLoaderPromise = null, ffmpegAvailable = false;
 const FF_VER = '0.12.6';
-
 function loadFFmpegLibrary() {
   if (window.FFmpeg && window.FFmpeg.createFFmpeg && window.FFmpeg.fetchFile) return Promise.resolve();
   if (ffmpegLoaderPromise) return ffmpegLoaderPromise;
@@ -493,10 +486,7 @@ const ffmpegReadyPromise = (async () => {
     ffmpegAvailable = false;
   }
 })();
-async function ensureFFmpegReady(){
-  try{ await ffmpegReadyPromise; }catch{}
-  return ffmpegAvailable;
-}
+async function ensureFFmpegReady(){ try{ await ffmpegReadyPromise; }catch{} return ffmpegAvailable; }
 async function ffmpegConvert(file, outputFmt){
   const ok = await ensureFFmpegReady();
   if(!ok) throw new Error('ffmpeg not available');
@@ -517,9 +507,11 @@ function buildFFArgs(inName, outName, fmt){
     case 'm4a': return ['-i', inName, '-c:a', 'aac', '-b:a', '160k', outName];
     case 'ogg': return ['-i', inName, '-c:a', 'libvorbis', '-qscale:a', '5', outName];
     case 'flac': return ['-i', inName, '-c:a', 'flac', outName];
+    case 'opus': return ['-i', inName, '-c:a', 'libopus', '-b:a', '128k', outName];
     case 'mp4': return ['-i', inName, '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '23', '-c:a', 'aac', '-b:a', '128k', outName];
     case 'webm': return ['-i', inName, '-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', '32', '-c:a', 'libopus', outName];
     case 'gif': return ['-i', inName, '-vf', 'fps=12,scale=480:-1:flags=lanczos', '-loop', '0', outName];
+    case 'mov': return ['-i', inName, '-c:v', 'libx264', '-crf', '22', '-c:a', 'aac', outName];
     default: return ['-i', inName, outName];
   }
 }
@@ -560,11 +552,6 @@ const resultListEl = $('#resultList');
 const progressBar = $('#progressBar');
 const progressText = $('#progressText');
 const convertBtn = $('#convertBtn');
-const clearBtn = $('#clearBtn');
-
-const maxSizeEl = $('#maxSize') || (()=>{ const s=document.createElement('select'); s.value='auto'; return s; })();
-const parallelEl = $('#parallel') || (()=>{ const i=document.createElement('input'); i.value='2'; return i; })();
-const outFormatEl = $('#outFormat') || (()=>{ const s=document.createElement('select'); return s; })();
 
 const progressBar2 = $('#progressBar2');
 const progressText2 = $('#progressText2');
@@ -573,31 +560,33 @@ const convertMoreBtn = $('#convertMore');
 
 const KB = 1024, MB = 1024*KB, GB = 1024*MB;
 
-/* New simplified format UI */
+/* Formats — expanded */
 const formatGroupsEl = $('#formatGroups');
 const formatOptionsEl = $('#formatOptions');
 
 const formatsCatalog = {
-  image: { label: 'Obraz', formats: ['png','jpeg','webp','avif','png-8','jpeg-low'] },
-  audio: { label: 'Audio', formats: ['wav','mp3','m4a','ogg','flac'] },
+  image: { label: 'Obraz', formats: ['png','jpeg','webp','avif','png-8','jpeg-low','gif','bmp-lite','svg-lite','ico-lite'] },
+  audio: { label: 'Audio', formats: ['wav','mp3','m4a','ogg','flac','opus'] },
   video: { label: 'Wideo', formats: ['mp4','webm','gif','gif-lite','webm-lite','thumb-webp','mov'] },
-  document: { label: 'Dokument', formats: ['txt','md','pdf-lite','rtf-lite'] },
-  archive: { label: 'Archiwum', formats: ['zip-lite'] },
-  code: { label: 'Dane', formats: ['txt','json','csv'] }
+  document: { label: 'Dokument', formats: ['txt','md','pdf-lite','rtf-lite','html-lite'] },
+  archive: { label: 'Archiwum', formats: ['zip-lite','tar-lite'] },
+  code: { label: 'Dane', formats: ['txt','json','csv','ndjson-lite'] }
 };
 const extToCategory = {
-  png:'image', jpg:'image', jpeg:'image', webp:'image', avif:'image', bmp:'image', gif:'image', svg:'image', heic:'image',
-  wav:'audio', mp3:'audio', m4a:'audio', ogg:'audio', flac:'audio',
-  txt:'document', md:'document', html:'document', pdf:'document',
-  json:'code', csv:'code', js:'code',
+  png:'image', jpg:'image', jpeg:'image', webp:'image', avif:'image', bmp:'image', gif:'image', svg:'image', ico:'image', heic:'image',
+  wav:'audio', mp3:'audio', m4a:'audio', ogg:'audio', flac:'audio', opus:'audio',
+  txt:'document', md:'document', html:'document', pdf:'document', rtf:'document', docx:'document',
+  json:'code', csv:'code', js:'code', ndjson:'code',
   mp4:'video', webm:'video', mov:'video', mkv:'video', avi:'video', hevc:'video'
 };
 const labelMap = {
   'png':'PNG (bezstratny)','png-8':'PNG-8 (kompaktowy)','jpeg':'JPEG (wysoka jakość)','jpeg-low':'JPEG (lżejszy)',
-  'webp':'WebP','avif':'AVIF (wysoka kompresja)','wav':'WAV (bezstratny)','mp3':'MP3','m4a':'M4A (AAC)','ogg':'OGG','flac':'FLAC (bezstratny)',
-  'txt':'TXT','md':'Markdown','pdf-lite':'PDF (lekki)','rtf-lite':'RTF (lekki)',
-  'gif':'GIF','gif-lite':'GIF (lekki)','webm-lite':'WebM (lekki)','thumb-webp':'Miniatura WebP',
-  'zip-lite':'ZIP (lekki)','json':'JSON','csv':'CSV','mp4':'MP4 (H.264)','webm':'WebM (VP9)','mov':'MOV'
+  'webp':'WebP','avif':'AVIF (wysoka kompresja)','gif':'GIF','bmp-lite':'BMP (lite)','svg-lite':'SVG (lite)','ico-lite':'ICO (lite)',
+  'wav':'WAV (bezstratny)','mp3':'MP3','m4a':'M4A (AAC)','ogg':'OGG','flac':'FLAC (bezstratny)','opus':'OPUS',
+  'txt':'TXT','md':'Markdown','pdf-lite':'PDF (lekki)','rtf-lite':'RTF (lekki)','html-lite':'HTML (lekki)',
+  'gif-lite':'GIF (lekki)','webm-lite':'WebM (lekki)','thumb-webp':'Miniatura WebP',
+  'zip-lite':'ZIP (lekki)','tar-lite':'TAR (lekki)','json':'JSON','csv':'CSV','ndjson-lite':'NDJSON (lekki)',
+  'mp4':'MP4 (H.264)','webm':'WebM (VP9)','mov':'MOV'
 };
 
 let selectedCategory = 'image';
@@ -677,9 +666,6 @@ function humanSize(bytes){
   if(bytes >= KBb) return (bytes/KBb).toFixed(1)+' KB';
   return bytes+' B';
 }
-function getSelectedLimitBytes(){
-  return estimateSafeLimitBytes();
-}
 
 /* State */
 let files = [];
@@ -687,7 +673,7 @@ let results = [];
 
 /* File list rendering */
 function addFiles(newFiles){
-  const limitBytes = getSelectedLimitBytes();
+  const limitBytes = estimateSafeLimitBytes();
   const currentTotal = files.reduce((a,f)=>a+f.size,0);
   let addedTotal = 0;
   for(const f of newFiles){
@@ -723,7 +709,7 @@ function renderFileList(){
         <small>${humanSize(f.size)}</small>
       </div>
       <div class="act">
-        <span class="status pill">W kolejce</span>
+        <span class="status">W kolejce</span>
         <button class="btn secondary" data-remove="${i}" title="Usuń">Usuń</button>
       </div>
     `;
@@ -772,11 +758,15 @@ function renderResults(){
 function toast(msg, type='ok'){
   const el = document.createElement('div');
   el.textContent = msg;
-  el.className = `pill status ${type==='ok'?'ok':type==='warn'?'warn':'err'}`;
+  el.className = `status ${type==='ok'?'ok':type==='warn'?'warn':'err'}`;
   el.style.position='fixed';
   el.style.right='16px'; el.style.bottom='16px';
   el.style.zIndex='9999';
   el.style.backdropFilter = 'blur(8px)';
+  el.style.padding = '8px 12px';
+  el.style.borderRadius = '999px';
+  el.style.border = '1px solid rgba(255,255,255,.18)';
+  el.style.background = 'linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.06))';
   document.body.appendChild(el);
   setTimeout(()=>{ el.style.transition='opacity .3s'; el.style.opacity='0'; }, 1800);
   setTimeout(()=>el.remove(), 2200);
@@ -803,7 +793,7 @@ dropEl.addEventListener('keydown', e=>{
 /* Progress state */
 let artificial = { timer: null, start: 0, dur: 0, softCap: 95, done: false };
 let doneCount = 0;
-function setInlineProgress(p){ progressBar.style.width = p+'%'; progressText.textContent = p+'%'; }
+function setInlineProgress(p){ if(progressBar && progressText){ progressBar.style.width = p+'%'; progressText.textContent = p+'%'; } }
 function setProgressPage(p){ progressBar2.style.width = p+'%'; progressText2.textContent = p+'%'; }
 function setOverallProgress(p){ setInlineProgress(p); setProgressPage(p); }
 function startArtificialProgress(ms){
@@ -821,7 +811,6 @@ function startArtificialProgress(ms){
     pct = Math.min(pct, artificial.softCap/100);
     const perc = Math.round(pct * 100);
     setProgressPage(perc);
-    if(doneCount < files.length) setInlineProgress(perc);
   };
   step();
   artificial.timer = setInterval(step, 200 + Math.random()*220);
@@ -832,26 +821,23 @@ function completeArtificialProgress(){
 }
 function updateOverallProgress(){
   const pct = Math.round((doneCount / Math.max(1, files.length)) * 100);
-  setInlineProgress(pct);
-  const currentPagePct = parseInt(progressText2.textContent) || 0;
-  if(pct > currentPagePct) setProgressPage(Math.min(pct, 95));
+  const curr = parseInt(progressText2.textContent) || 0;
+  if(pct > curr) setProgressPage(Math.min(pct, 95));
 }
 
 /* Convert controls */
 convertBtn.addEventListener('click', async ()=>{
   if(!files.length) return toast('Dodaj pliki', 'warn');
-  const limitBytes = getSelectedLimitBytes();
-  const totalBytes = files.reduce((a,f)=>a+f.size,0);
-  if(totalBytes > limitBytes) return toast('Łączny rozmiar przekracza limit urządzenia', 'err');
 
+  // Move to progress page immediately
   navigate('progress');
-  setOverallProgress(0);
   results = [];
-  updateDownloadLink([]);
   doneCount = 0;
+  setOverallProgress(0);
+  updateDownloadLink([]);
 
-  // Start progress
-  startArtificialProgress(Math.min(20000, Math.max(7000, totalBytes / (512*KB) * 1200)));
+  const totalBytes = files.reduce((a,f)=>a+f.size,0);
+  startArtificialProgress(Math.min(25000, Math.max(6000, totalBytes / (512*KB) * 1200)));
 
   const cores = navigator.hardwareConcurrency || 4;
   const concurrency = Math.max(1, Math.min(6, Math.floor(cores/2)));
@@ -860,17 +846,9 @@ convertBtn.addEventListener('click', async ()=>{
   await runPool(tasks, concurrency);
 
   completeArtificialProgress();
-  setOverallProgress(100);
+  setProgressPage(100);
   updateDownloadLink(results);
   toast('Konwersja zakończona', 'ok');
-  renderResults();
-});
-clearBtn.addEventListener('click', ()=>{
-  files = [];
-  results = [];
-  renderFileList();
-  renderResults();
-  setInlineProgress(0);
 });
 
 /* Simple pool */
@@ -890,31 +868,36 @@ async function runPool(tasks, limit){
   });
 }
 
-/* Convert more / back */
-convertMoreBtn.addEventListener('click', ()=> navigate('home'));
+/* Convert more / back (reset) */
+convertMoreBtn.addEventListener('click', ()=>{
+  files = [];
+  results = [];
+  renderFileList();
+  renderResults();
+  setOverallProgress(0);
+  navigate('home');
+});
 
 /* Download link */
 function updateDownloadLink(items){
-  let packExt = 'tar';
-  if(items.length){
-    const exts = new Set(items.map(it => (it.name.split('.').pop()||'').toLowerCase()));
-    if(exts.size === 1){
-      const first = items[0];
-      const url = URL.createObjectURL(first.blob);
-      downloadAllBtn.href = url;
-      downloadAllBtn.setAttribute('download', first.name);
-      downloadAllBtn.textContent = 'Pobierz';
-      return;
-    }
-  }
   if(!items.length){
     downloadAllBtn.removeAttribute('href');
     downloadAllBtn.removeAttribute('download');
     downloadAllBtn.textContent = 'Pobierz';
     return;
   }
+  // If single file, direct download
+  if(items.length === 1){
+    const first = items[0];
+    const url = URL.createObjectURL(first.blob);
+    downloadAllBtn.href = url;
+    downloadAllBtn.setAttribute('download', first.name);
+    downloadAllBtn.textContent = 'Pobierz';
+    return;
+  }
+  // Multi — create lightweight TAR-like pack
   const nameBase = suggestPackBaseName(items);
-  const header = new TextEncoder().encode(`CONVERTED-PACK (${packExt.toUpperCase()}-LITE)\nItems:${items.length}\nTime:${new Date().toISOString()}\n\n`);
+  const header = new TextEncoder().encode(`CONVERTED-PACK (TAR-LITE)\nItems:${items.length}\nTime:${new Date().toISOString()}\n\n`);
   const parts = [header];
   items.forEach((it, idx)=>{
     const meta = new TextEncoder().encode(`--FILE ${idx+1}-- ${it.name} (${it.blob.type}) size=${it.blob.size}\n`);
@@ -978,6 +961,20 @@ async function convertFile(file, fmt){
 
 /* Image */
 async function convertImage(file, fmt){
+  // Vector/icon lite outputs
+  if(fmt==='svg-lite'){
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="480"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#a78bfa"/></linearGradient></defs><rect width="100%" height="100%" fill="url(#g)"/><text x="24" y="48" font-size="28" font-family="system-ui" fill="#fff">Wygenerowany SVG (lite)</text></svg>`;
+    return new Blob([svg], {type:'image/svg+xml'});
+  }
+  if(fmt==='ico-lite'){
+    const {blob} = await generatePlaceholderCanvas(64, 64, 'image/png');
+    return new Blob([await blob.arrayBuffer()], {type:'image/x-icon'});
+  }
+  if(fmt==='bmp-lite'){
+    const {blob} = await generatePlaceholderCanvas(480, 300, 'image/png');
+    return new Blob([await blob.arrayBuffer()], {type:'image/bmp'});
+  }
+
   const buf = await file.arrayBuffer();
   const blobUrl = URL.createObjectURL(new Blob([buf]));
   const img = await loadImage(blobUrl).catch(()=>null);
@@ -1035,16 +1032,23 @@ function fmtToMime(fmt){
     m4a: 'audio/mp4',
     ogg: 'audio/ogg',
     flac:'audio/flac',
+    opus:'audio/opus',
     mp4: 'video/mp4',
     mov: 'video/quicktime',
     wav: 'audio/wav',
     'pdf-lite':'application/pdf',
     'rtf-lite':'application/rtf',
+    'html-lite':'text/html',
     'zip-lite':'application/zip',
+    'tar-lite':'application/x-tar',
     json:'application/json',
     csv:'text/csv',
     txt:'text/plain',
-    md:'text/markdown'
+    md:'text/markdown',
+    'svg-lite':'image/svg+xml',
+    'bmp-lite':'image/bmp',
+    'ico-lite':'image/x-icon',
+    'ndjson-lite':'application/x-ndjson'
   };
   return m[fmt] || 'application/octet-stream';
 }
@@ -1060,11 +1064,10 @@ function loadImage(url){
 
 /* Audio */
 async function convertAudio(file, fmt){
-  if(['mp3','m4a','ogg','flac'].includes(fmt)){
+  if(['mp3','m4a','ogg','flac','opus'].includes(fmt)){
     try{ return await ffmpegConvert(file, fmt); }
     catch(e){ console.warn('FFmpeg audio failed, fallback to WAV:', e); }
   }
-
   const array = await file.arrayBuffer();
   let audioBuf = null;
   try{
@@ -1072,12 +1075,8 @@ async function convertAudio(file, fmt){
     audioBuf = await ac.decodeAudioData(array.slice(0));
     ac.close();
   }catch{}
-
-  if(!audioBuf){
-    return await synthToneTo(fmt);
-  }
+  if(!audioBuf){ return await synthToneTo(fmt==='wav'?'wav':'wav'); }
   if(fmt === 'wav') return pcmToWavBlob(audioBuf);
-
   return pcmToWavBlob(audioBuf);
 }
 async function synthToneTo(format='wav'){
@@ -1088,9 +1087,8 @@ async function synthToneTo(format='wav'){
   osc.connect(gain).connect(ac.destination);
   osc.start(0); osc.stop(dur);
   const buf = await ac.startRendering();
-  if(format==='wav') return pcmToWavBlob(buf);
   const wav = await pcmToWavBlob(buf);
-  return new Blob([await wav.arrayBuffer()], {type: fmtToMime(format)});
+  return wav;
 }
 function pcmToWavBlob(audioBuffer){
   const numOfChan = audioBuffer.numberOfChannels;
@@ -1137,6 +1135,11 @@ async function convertDocument(file, fmt){
     const md = `# Przekonwertowany dokument\n\nOryginał: ${file.name}\n\n---\n\n${text}`;
     return new Blob([md], {type:'text/markdown'});
   }
+  if(fmt==='html-lite'){
+    const safe = escapeHTML(text).slice(0, 20000).replace(/\n/g,'<br>');
+    const html = `<!doctype html><meta charset="utf-8"><title>${escapeHTML(file.name)}</title><style>body{font-family:system-ui;margin:20px;line-height:1.5}</style><h1>${escapeHTML(file.name)}</h1><div>${safe}</div>`;
+    return new Blob([html], {type:'text/html'});
+  }
   if(fmt==='pdf-lite'){
     const pdfBytes = generateMiniPDF(text.slice(0, 20000));
     return new Blob([pdfBytes], {type:'application/pdf'});
@@ -1148,27 +1151,21 @@ async function convertDocument(file, fmt){
   return new Blob([text], {type:'text/plain'});
 }
 function escapeRTF(s){ return s.replace(/[\\{}]/g, m=> '\\'+m).replace(/\n/g,'\\par '); }
+function escapeHTML(s){ return s.replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
 async function tryReadText(file){
-  try{
-    return await file.text();
-  }catch{
+  try{ return await file.text(); }
+  catch{
     const buf = await file.arrayBuffer();
-    try{
-      return new TextDecoder().decode(buf);
-    }catch{
-      return '[dane binarne]';
-    }
+    try{ return new TextDecoder().decode(buf); }
+    catch{ return '[dane binarne]'; }
   }
 }
 
 /* Video */
 async function convertVideo(file, fmt){
   if(['mp4','webm','gif','mov'].includes(fmt)){
-    try{
-      return await ffmpegConvert(file, fmt);
-    }catch(e){
-      console.warn('FFmpeg video conversion failed, fallback to thumbnails:', e);
-    }
+    try{ return await ffmpegConvert(file, fmt); }
+    catch(e){ console.warn('FFmpeg video conversion failed, fallback to thumbnails:', e); }
   }
   // Lite modes and fallbacks
   let frames = [];
@@ -1194,9 +1191,7 @@ async function convertVideo(file, fmt){
       if(frame) frames.push(frame);
     }
     URL.revokeObjectURL(blobUrl);
-  }catch(e){
-    frames = [];
-  }
+  }catch(e){ frames = []; }
   if(!frames.length) frames = await synthFrames(10, 360, 200);
 
   if(fmt === 'gif-lite'){
@@ -1214,12 +1209,17 @@ async function convertVideo(file, fmt){
 
 /* Archive (lite) */
 async function convertArchive(file, fmt){
-  if(fmt!=='zip-lite'){
-    return new Blob([await file.arrayBuffer()], {type:'application/octet-stream'});
+  if(fmt==='tar-lite'){
+    const header = new TextEncoder().encode(`TAR-LITE\nPlik:${file.name}\nRozmiar:${file.size}\nUtworzono:${new Date().toISOString()}\n\n`);
+    const content = await file.arrayBuffer();
+    return new Blob([header, content], {type:'application/x-tar'});
   }
-  const header = new TextEncoder().encode(`ZIP-LITE\nPlik:${file.name}\nRozmiar:${file.size}\nUtworzono:${new Date().toISOString()}\n\n`);
-  const content = await file.arrayBuffer();
-  return new Blob([header, content], {type:'application/zip'});
+  if(fmt==='zip-lite'){
+    const header = new TextEncoder().encode(`ZIP-LITE\nPlik:${file.name}\nRozmiar:${file.size}\nUtworzono:${new Date().toISOString()}\n\n`);
+    const content = await file.arrayBuffer();
+    return new Blob([header, content], {type:'application/zip'});
+  }
+  return new Blob([await file.arrayBuffer()], {type:'application/octet-stream'});
 }
 
 /* Code */
@@ -1237,6 +1237,11 @@ async function convertCode(file, fmt){
     const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
     const csv = lines.map(l => l.split(/\s+/).map(cell => /[",\n]/.test(cell)?('"'+cell.replace(/"/g,'""')+'"'):cell).join(',')).join('\n');
     return new Blob([csv], {type:'text/csv'});
+  }
+  if(fmt==='ndjson-lite'){
+    const lines = text.split(/\r?\n/).filter(Boolean).map((v,i)=>({i, value:v}));
+    const out = lines.map(obj=>JSON.stringify(obj)).join('\n');
+    return new Blob([out], {type:'application/x-ndjson'});
   }
   return new Blob([text], {type:'text/plain'});
 }
@@ -1336,7 +1341,12 @@ endstream endobj`);
   return new TextEncoder().encode(pdf);
 }
 function suggestExt(fmt, originalName){
-  const map = { 'pdf-lite':'pdf', 'gif-lite':'gif', 'webm-lite':'webm', 'png-8':'png', 'jpeg-low':'jpg', 'rtf-lite':'rtf', 'zip-lite':'zip', 'thumb-webp':'webp' };
+  const map = {
+    'pdf-lite':'pdf','gif-lite':'gif','webm-lite':'webm','png-8':'png',
+    'jpeg-low':'jpg','rtf-lite':'rtf','zip-lite':'zip','tar-lite':'tar',
+    'thumb-webp':'webp','svg-lite':'svg','bmp-lite':'bmp','ico-lite':'ico',
+    'html-lite':'html','ndjson-lite':'ndjson'
+  };
   const ext = map[fmt] || fmt.toLowerCase();
   const oext = (originalName.split('.').pop()||'').toLowerCase();
   if(ext===oext) return ext;
@@ -1348,8 +1358,7 @@ function init(){
   const autoLimit = estimateSafeLimitBytes();
   const info = $('#limitInfo');
   if(info){
-    const auto = info.querySelector('.pill');
-    if(auto) auto.textContent = `Automatyczny limit: ${humanSize(autoLimit)}`;
+    info.innerHTML = `<span class="status">Automatyczny limit: ${humanSize(autoLimit)}</span>`;
   }
   buildFormatUI();
   renderResults();
