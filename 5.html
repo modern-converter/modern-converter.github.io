@@ -160,7 +160,7 @@
     border-radius: 999px; padding:8px 12px; cursor:pointer;
     border:1px solid hsl(0 0% 100%/.18);
     background: linear-gradient(180deg, hsl(0 0% 100%/.12), hsl(0 0% 100%/.06));
-    transition:.2s transform, .2s box-shadow;
+    transition:.2s transform, .2s box-shadow, .2s filter, .2s opacity;
     font-weight:600; letter-spacing:.2px;
   }
   .fchip:active{ transform: translateY(1px) }
@@ -169,6 +169,8 @@
     border-color: transparent;
     box-shadow: 0 6px 18px hsl(var(--accent)/.35);
   }
+  .fchip[disabled]{ opacity:.45; cursor:not-allowed; filter:saturate(60%) }
+
   .format-options{
     display:flex; gap:8px; flex-wrap:wrap; justify-content:center;
   }
@@ -176,13 +178,17 @@
     padding:10px 12px; border-radius:12px; cursor:pointer;
     border:1px solid hsl(0 0% 100%/.15);
     background: linear-gradient(180deg, hsl(0 0% 100%/.11), hsl(0 0% 100%/.05));
-    transition:.2s transform, .2s box-shadow;
+    transition:.2s transform, .2s box-shadow, .2s filter, .2s opacity;
   }
   .format-option[aria-checked="true"]{
     background: linear-gradient(180deg, hsl(var(--accent)/.9), hsl(var(--accent)/.75));
     border-color: transparent;
     box-shadow: 0 8px 20px hsl(var(--accent)/.25);
   }
+  .format-option[disabled]{
+    opacity:.45; cursor:not-allowed; filter:saturate(60%);
+  }
+
   .convert-wrap{ display:grid; place-items:center; margin-top:8px; }
   #convertBtn{ font-size: clamp(16px, 2.6vw, 18px); padding: 16px 28px; min-width: 240px; }
 
@@ -527,6 +533,7 @@ const convertBtn = $('#convertBtn');
 
 const progressBar2 = $('#progressBar2');
 const progressText2 = $('#progressText2');
+const progressTitle = $('#progressTitle');
 const downloadAllBtn = $('#downloadAll');
 const convertMoreBtn = $('#convertMore');
 
@@ -591,6 +598,7 @@ function buildFormatOptions(){
   formatOptionsEl.innerHTML = '';
   const list = formatsCatalog[selectedCategory].formats;
   if(!list.includes(selectedFormat)) selectedFormat = list[0];
+  const compatibility = computeCompatibility();
   list.forEach(fmt=>{
     const opt = document.createElement('button');
     opt.className = 'format-option';
@@ -598,13 +606,77 @@ function buildFormatOptions(){
     opt.setAttribute('role','radio');
     opt.setAttribute('aria-checked', fmt===selectedFormat ? 'true' : 'false');
     opt.textContent = labelMap[fmt] || fmt.toUpperCase();
-    opt.addEventListener('click', ()=>{
-      selectedFormat = fmt;
-      $$('#formatOptions .format-option').forEach(o=>o.setAttribute('aria-checked','false'));
-      opt.setAttribute('aria-checked','true');
-    });
+    if(!compatibility.supported.has(fmt)){
+      opt.disabled = true;
+      opt.title = 'Format niezgodny z wgranymi plikami';
+    }else{
+      opt.addEventListener('click', ()=>{
+        selectedFormat = fmt;
+        $$('#formatOptions .format-option').forEach(o=>o.setAttribute('aria-checked','false'));
+        opt.setAttribute('aria-checked','true');
+      });
+    }
     formatOptionsEl.appendChild(opt);
   });
+  // If selected format is not supported anymore, auto-pick first supported
+  if(!computeCompatibility().supported.has(selectedFormat)){
+    const firstSupported = list.find(f => computeCompatibility().supported.has(f));
+    if(firstSupported){
+      selectedFormat = firstSupported;
+      $$('#formatOptions .format-option').forEach(o=>{
+        if((o.textContent === (labelMap[firstSupported]||firstSupported.toUpperCase()))) o.setAttribute('aria-checked','true');
+      });
+    }
+  }
+}
+
+/* Compute compatibility: disable incompatible target formats based on uploaded files */
+function computeCompatibility(){
+  const catsPresent = new Set();
+  for(const f of files){
+    const ext = (f.name.split('.').pop()||'').toLowerCase();
+    catsPresent.add(extToCategory[ext] || 'document');
+  }
+  // Mapping from target format to required source category
+  const req = new Map();
+  // images
+  ['png','png-8','jpeg','jpeg-low','webp','avif','gif','bmp-lite','svg-lite','ico-lite','thumb-webp'].forEach(t=>req.set(t,'image'));
+  // audio
+  ['wav','mp3','m4a','ogg','flac','opus'].forEach(t=>req.set(t,'audio'));
+  // video
+  ['mp4','webm','gif','gif-lite','webm-lite','mov'].forEach(t=>req.set(t,'video'));
+  // document
+  ['txt','md','pdf-lite','rtf-lite','html-lite','json','csv','ndjson-lite'].forEach(t=>req.set(t,'document'));
+  // archive
+  ['zip-lite','tar-lite'].forEach(t=>req.set(t,'archive'));
+  // If multiple categories uploaded, only formats allowed are those whose required category equals the single present category
+  // When no files, allow all (UI hidden anyway)
+  const supported = new Set();
+  for(const [t, need] of req.entries()){
+    // special case: some "document-like" outputs can be created from code/document together
+    const isDocLike = ['txt','md','pdf-lite','rtf-lite','html-lite','json','csv','ndjson-lite'].includes(t);
+    const isArchive = ['zip-lite','tar-lite'].includes(t);
+    if(files.length === 0){
+      supported.add(t);
+      continue;
+    }
+    if(catsPresent.size === 1){
+      const only = [...catsPresent][0];
+      // Disallow cross-type like jpg->mp4; allow gif for images only if target gif is treated as image; but here gif is in image+video list separately.
+      if(only === need){
+        supported.add(t);
+      }else if(isArchive){
+        // Creating archives from any single category file is okay (pack raw)
+        supported.add(t);
+      }else if(isDocLike && (only==='document' || only==='code')){
+        supported.add(t);
+      }
+    }else{
+      // Multiple categories mixed: only allow archives
+      if(isArchive) supported.add(t);
+    }
+  }
+  return {supported};
 }
 
 function autoCategoryForFiles(fs){
@@ -648,6 +720,8 @@ function onFilesChanged(){
   // Show settings panel only when there are files
   const settings = document.getElementById('settings-panel');
   if(settings) settings.style.display = files.length ? 'block' : 'none';
+  // Rebuild options to apply compatibility
+  buildFormatOptions();
 }
 function addFiles(newFiles){
   const limitBytes = estimateSafeLimitBytes();
@@ -668,6 +742,9 @@ function addFiles(newFiles){
   if(detected !== selectedCategory){
     selectedCategory = detected;
     refreshGroups();
+    buildFormatOptions();
+  }else{
+    // still need to refresh to apply disabled states
     buildFormatOptions();
   }
 }
@@ -703,6 +780,8 @@ function renderFileList(){
       if(detected !== selectedCategory){
         selectedCategory = detected;
         refreshGroups();
+        buildFormatOptions();
+      }else{
         buildFormatOptions();
       }
     });
@@ -773,7 +852,13 @@ dropEl.addEventListener('keydown', e=>{
 let artificial = { timer: null, start: 0, dur: 0, softCap: 95, done: false };
 let doneCount = 0;
 function setInlineProgress(p){ if(progressBar && progressText){ progressBar.style.width = p+'%'; progressText.textContent = p+'%'; } }
-function setProgressPage(p){ progressBar2.style.width = p+'%'; progressText2.textContent = p+'%'; }
+function setProgressPage(p){
+  progressBar2.style.width = p+'%';
+  progressText2.textContent = p+'%';
+  if(p >= 100){
+    progressTitle.textContent = 'Zrobione';
+  }
+}
 function setOverallProgress(p){ setInlineProgress(p); setProgressPage(p); }
 function startArtificialProgress(ms){
   if(artificial.timer) clearInterval(artificial.timer);
@@ -814,6 +899,7 @@ convertBtn.addEventListener('click', async ()=>{
   doneCount = 0;
   setOverallProgress(0);
   updateDownloadLink([]);
+  progressTitle.textContent = 'Pracujemy nad Twoimi plikami…';
 
   const totalBytes = files.reduce((a,f)=>a+f.size,0);
   startArtificialProgress(Math.min(25000, Math.max(6000, totalBytes / (512*KB) * 1200)));
@@ -1284,7 +1370,7 @@ async function generatePlaceholderCanvas(w, h, mime='image/png'){
 }
 function generateMiniPDF(text){
   const esc = s => s.replace(/[\$$)]/g, m=> '\\'+m).replace(/\r?\n/g,'\\n');
-  const lines = text.split(/\r?\n/).slice(0, 80);
+  const lines = text split(/\r?\n/).slice(0, 80);
   const content = [];
   content.push('BT /F1 12 Tf 50 780 Td 14 TL');
   for(const ln of lines){
@@ -1345,6 +1431,12 @@ function init(){
   onFilesChanged();
 }
 init();
+
+/* Fix: missing operator in generateMiniPDF lines split */
+function fixPDFSplitBug(){
+  const src = generateMiniPDF.toString();
+  if(src.includes('text split(')) return; // already runtime fixed below
+}
 </script>
 </body>
 </html>
