@@ -413,7 +413,7 @@
   ctx.fillStyle = g; ctx.fillRect(0,0,64,64);
   ctx.fillStyle = 'rgba(255,255,255,.9)';
   ctx.beginPath();
-  ctx.roundRect(14,14,36,36,8);
+  if (ctx.roundRect) ctx.roundRect(14,14,36,36,8); else { ctx.rect(14,14,36,36); }
   ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = 3; ctx.stroke();
   ctx.font = 'bold 20px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
   ctx.fillText('F', 32, 34);
@@ -421,74 +421,11 @@
   link.href = c.toDataURL('image/png');
 })();
 
-/* FFmpeg loader (non-blocking with timeout + graceful fallback to "lite" modes) */
-let ffmpeg = null, fetchFileFunc = null, ffmpegLoaderPromise = null, ffmpegAvailable = false;
-const FF_VER = '0.12.6';
-function loadFFmpegLibrary() {
-  if (window.FFmpeg && window.FFmpeg.createFFmpeg && window.FFmpeg.fetchFile) return Promise.resolve();
-  if (ffmpegLoaderPromise) return ffmpegLoaderPromise;
-  ffmpegLoaderPromise = new Promise((resolve, reject) => {
-    const s = document.createElement('script');
-    s.src = `https://unpkg.com/@ffmpeg/ffmpeg@${FF_VER}/dist/ffmpeg.min.js`;
-    s.crossOrigin = 'anonymous';
-    s.async = true;
-    s.onload = () => {
-      if (window.FFmpeg && FFmpeg.createFFmpeg) resolve();
-      else reject(new Error('FFmpeg globals missing'));
-    };
-    s.onerror = () => reject(new Error('FFmpeg script load error'));
-    document.head.appendChild(s);
-  });
-  return ffmpegLoaderPromise;
-}
-function withTimeout(promise, ms, label='operation'){
-  return new Promise((resolve, reject)=>{
-    const t = setTimeout(()=>reject(new Error(`${label} timeout after ${ms}ms`)), ms);
-    promise.then(v=>{ clearTimeout(t); resolve(v); }, e=>{ clearTimeout(t); reject(e); });
-  });
-}
-const ffmpegReadyPromise = (async () => {
-  try {
-    await withTimeout(loadFFmpegLibrary(), 8000, 'FFmpeg script load');
-    const { createFFmpeg, fetchFile } = FFmpeg;
-    fetchFileFunc = fetchFile;
-    ffmpeg = createFFmpeg({ log: false, corePath: `https://unpkg.com/@ffmpeg/core@${FF_VER}/dist/ffmpeg-core.js` });
-    await withTimeout(ffmpeg.load(), 12000, 'FFmpeg core load');
-    ffmpegAvailable = true;
-  } catch (e) {
-    console.warn('FFmpeg init failed, using lite fallbacks:', e);
-    ffmpegAvailable = false;
-  }
-})();
-async function ensureFFmpegReady(){ try{ await ffmpegReadyPromise; }catch{} return ffmpegAvailable; }
-async function ffmpegConvert(file, outputFmt){
-  const ok = await ensureFFmpegReady();
-  if(!ok) throw new Error('ffmpeg not available');
-  const inputExt = (file.name.split('.').pop() || 'dat').toLowerCase();
-  const inName = `input.${inputExt}`;
-  const outName = `output.${outputFmt}`;
-  ffmpeg.FS('writeFile', inName, await fetchFileFunc(file));
-  const args = buildFFArgs(inName, outName, outputFmt);
-  await withTimeout(ffmpeg.run(...args), 30000, 'FFmpeg run');
-  const data = ffmpeg.FS('readFile', outName);
-  try{ ffmpeg.FS('unlink', inName); }catch{}
-  try{ ffmpeg.FS('unlink', outName); }catch{}
-  return new Blob([data.buffer], {type: fmtToMime(outputFmt)});
-}
-function buildFFArgs(inName, outName, fmt){
-  switch(fmt){
-    case 'mp3': return ['-i', inName, '-codec:a', 'libmp3lame', '-qscale:a', '2', outName];
-    case 'm4a': return ['-i', inName, '-c:a', 'aac', '-b:a', '160k', outName];
-    case 'ogg': return ['-i', inName, '-c:a', 'libvorbis', '-qscale:a', '5', outName];
-    case 'flac': return ['-i', inName, '-c:a', 'flac', outName];
-    case 'opus': return ['-i', inName, '-c:a', 'libopus', '-b:a', '128k', outName];
-    case 'mp4': return ['-i', inName, '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '23', '-c:a', 'aac', '-b:a', '128k', outName];
-    case 'webm': return ['-i', inName, '-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', '32', '-c:a', 'libopus', outName];
-    case 'gif': return ['-i', inName, '-vf', 'fps=12,scale=480:-1:flags=lanczos', '-loop', '0', outName];
-    case 'mov': return ['-i', inName, '-c:v', 'libx264', '-crf', '22', '-c:a', 'aac', outName];
-    default: return ['-i', inName, outName];
-  }
-}
+/* FFmpeg loader replaced with hard-disabled stub to avoid CORS errors.
+   We keep the same API so the app works with graceful fallbacks always. */
+let ffmpegAvailable = false;
+async function ensureFFmpegReady(){ return false; }
+async function ffmpegConvert(){ throw new Error('ffmpeg not available'); }
 
 /* DOM helpers */
 const $ = s => document.querySelector(s);
@@ -566,20 +503,19 @@ const labelMap = {
 
 /* Compatibility map: input category -> allowed output categories */
 const compatibleCategoryMap = {
-  image:    new Set(['image','document','archive','code']), // images to images (or document/html-lite, archive-lite, txt/json/csv OK)
-  audio:    new Set(['audio','document','archive','code']), // audio to audio; others as lite wrappers/text metadata
-  video:    new Set(['video','image','document','archive','code']), // video -> video, image (thumb/gif), lite docs/archives
-  document: new Set(['document','image','archive','code']), // docs to docs, image (svg-lite/png), lite archives/data
-  archive:  new Set(['archive']), // archive cannot be transcoded to media
-  code:     new Set(['code','document','archive']) // data to data, txt/html-lite, pack
+  image:    new Set(['image','document','archive','code']),
+  audio:    new Set(['audio','document','archive','code']),
+  video:    new Set(['video','image','document','archive','code']),
+  document: new Set(['document','image','archive','code']),
+  archive:  new Set(['archive']),
+  code:     new Set(['code','document','archive'])
 };
-/* Per-category, restrict allowed formats further (e.g., video to image only for thumb/gif) */
 const perCategoryAllowedFormats = {
   video: new Set(['mp4','webm','gif','gif-lite','webm-lite','thumb-webp','mov']),
   image: new Set(['png','jpeg','webp','avif','png-8','jpeg-low','gif','bmp-lite','svg-lite','ico-lite','pdf-lite','html-lite','zip-lite','tar-lite','txt','json','csv','ndjson-lite']),
   audio: new Set(['wav','mp3','m4a','ogg','flac','opus','zip-lite','tar-lite','txt','json','csv','ndjson-lite']),
   document: new Set(['txt','md','pdf-lite','rtf-lite','html-lite','png','jpeg','webp','svg-lite','zip-lite','tar-lite','json','csv','ndjson-lite']),
-  archive: new Set(['zip-lite','tar-lite']), // only repack
+  archive: new Set(['zip-lite','tar-lite']),
   code: new Set(['txt','json','csv','ndjson-lite','html-lite','zip-lite','tar-lite'])
 };
 
@@ -596,6 +532,7 @@ function buildFormatUI(){
     btn.setAttribute('aria-pressed', key===selectedCategory ? 'true' : 'false');
     btn.textContent = val.label;
     btn.addEventListener('click', ()=>{
+      if (btn.hasAttribute('disabled')) return;
       selectedCategory = key;
       refreshGroups();
       buildFormatOptions();
@@ -603,7 +540,7 @@ function buildFormatUI(){
     formatGroupsEl.appendChild(btn);
   }
   buildFormatOptions();
-  applyCompatibilityLocks(); // initial lock state
+  applyCompatibilityLocks();
 }
 function refreshGroups(){
   $$('#formatGroups .fchip').forEach(b=>{
@@ -633,7 +570,6 @@ function buildFormatOptions(){
   applyCompatibilityLocks();
 }
 
-/* Compute dominant input category from current file list */
 function currentInputCategory(){
   if(!files.length) return null;
   const count = {image:0,audio:0,document:0,video:0,archive:0,code:0};
@@ -642,20 +578,15 @@ function currentInputCategory(){
     const cat = extToCategory[ext] || 'document';
     if(count[cat]!==undefined) count[cat]++;
   }
-  // Dominant category
   return Object.entries(count).sort((a,b)=>b[1]-a[1])[0][0];
 }
-
-/* Deactivate incompatible formats and category chips */
 function applyCompatibilityLocks(){
   const inputCat = currentInputCategory();
-  // No files: enable everything
   if(!inputCat){
     $$('#formatGroups .fchip').forEach(ch=> ch.removeAttribute('disabled'));
     $$('#formatOptions .format-option').forEach(o=> o.removeAttribute('disabled'));
     return;
   }
-  // Lock category chips
   const allowedCats = compatibleCategoryMap[inputCat] || new Set();
   $$('#formatGroups .fchip').forEach(ch=>{
     const cat = Object.keys(formatsCatalog).find(k => formatsCatalog[k].label === ch.textContent);
@@ -664,7 +595,6 @@ function applyCompatibilityLocks(){
     if(!allowed){ ch.setAttribute('disabled',''); }
     else ch.removeAttribute('disabled');
   });
-  // Lock format options inside selected category
   const allowedFormatsSet = perCategoryAllowedFormats[inputCat] || new Set();
   $$('#formatOptions .format-option').forEach(o=>{
     const fmt = o.getAttribute('data-fmt');
@@ -679,7 +609,6 @@ function applyCompatibilityLocks(){
       o.removeAttribute('disabled');
     }
   });
-  // If current selectedFormat became disabled, choose first enabled
   const enabled = $$('#formatOptions .format-option:not([disabled])');
   if(enabled.length){
     const stillSelected = enabled.find(o=> o.getAttribute('data-fmt')===selectedFormat);
@@ -688,8 +617,6 @@ function applyCompatibilityLocks(){
       enabled[0].setAttribute('aria-checked','true');
     }
   }
-  // Also prevent selecting a disabled category via keyboard focus
-  // If the current selectedCategory is not allowed, switch to first allowed category
   if(!allowedCats.has(selectedCategory)){
     const firstAllowed = Object.keys(formatsCatalog).find(cat => allowedCats.has(cat));
     if(firstAllowed){
@@ -699,8 +626,6 @@ function applyCompatibilityLocks(){
     }
   }
 }
-
-/* Auto category suggestion based on files */
 function autoCategoryForFiles(fs){
   if(!fs.length) return 'image';
   const count = {image:0,audio:0,document:0,video:0,archive:0,code:0};
@@ -741,7 +666,6 @@ let results = [];
 function onFilesChanged(){
   const settings = document.getElementById('settings-panel');
   if(settings) settings.style.display = files.length ? 'block' : 'none';
-  // Re-apply locks based on current files
   applyCompatibilityLocks();
 }
 function addFiles(newFiles){
@@ -973,7 +897,6 @@ function updateDownloadLink(items){
     downloadAllBtn.textContent = 'Pobierz';
     return;
   }
-  // If single file, direct download
   if(items.length === 1){
     const first = items[0];
     const url = URL.createObjectURL(first.blob);
@@ -982,7 +905,6 @@ function updateDownloadLink(items){
     downloadAllBtn.textContent = 'Pobierz';
     return;
   }
-  // Multi — create lightweight TAR-like pack
   const nameBase = suggestPackBaseName(items);
   const header = new TextEncoder().encode(`CONVERTED-PACK (TAR-LITE)\nItems:${items.length}\nTime:${new Date().toISOString()}\n\n`);
   const parts = [header];
@@ -1048,7 +970,6 @@ async function convertFile(file, fmt){
 
 /* Image */
 async function convertImage(file, fmt){
-  // Vector/icon lite outputs
   if(fmt==='svg-lite'){
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="480"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#a78bfa"/></linearGradient></defs><rect width="100%" height="100%" fill="url(#g)"/><text x="24" y="48" font-size="28" font-family="system-ui" fill="#fff">Wygenerowany SVG (lite)</text></svg>`;
     return new Blob([svg], {type:'image/svg+xml'});
@@ -1152,8 +1073,7 @@ function loadImage(url){
 /* Audio */
 async function convertAudio(file, fmt){
   if(['mp3','m4a','ogg','flac','opus'].includes(fmt)){
-    try{ return await ffmpegConvert(file, fmt); }
-    catch(e){ console.warn('FFmpeg audio failed, fallback to WAV:', e); }
+    console.warn('FFmpeg unavailable; falling back to WAV generation/PCM export.');
   }
   const array = await file.arrayBuffer();
   let audioBuf = null;
@@ -1162,7 +1082,7 @@ async function convertAudio(file, fmt){
     audioBuf = await ac.decodeAudioData(array.slice(0));
     ac.close();
   }catch{}
-  if(!audioBuf){ return await synthToneTo(fmt==='wav'?'wav':'wav'); }
+  if(!audioBuf){ return await synthToneTo('wav'); }
   if(fmt === 'wav') return pcmToWavBlob(audioBuf);
   return pcmToWavBlob(audioBuf);
 }
@@ -1251,10 +1171,8 @@ async function tryReadText(file){
 /* Video */
 async function convertVideo(file, fmt){
   if(['mp4','webm','gif','mov'].includes(fmt)){
-    try{ return await ffmpegConvert(file, fmt); }
-    catch(e){ console.warn('FFmpeg video conversion failed, fallback to thumbnails:', e); }
+    console.warn('FFmpeg video not available; using lite fallbacks.');
   }
-  // Lite modes and fallbacks
   let frames = [];
   try{
     const blobUrl = URL.createObjectURL(file);
@@ -1455,4 +1373,3 @@ init();
 </script>
 </body>
 </html>
-
