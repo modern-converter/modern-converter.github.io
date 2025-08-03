@@ -389,7 +389,7 @@ convertBtn.addEventListener('click', async ()=>{
   updateDownloadLink([]);
 
   const totalBytes = files.reduce((a,f)=>a+f.size,0);
-  startArtificialProgress(Math.min(25000, Math.max(6000, totalBytes / (512*KB) * 1200)));
+  startArtificialProgress(Math.min(25000, Math.max(6000, totalBytes / (512 * 1024) * 1200)));
 
   const cores = navigator.hardwareConcurrency || 4;
   const concurrency = Math.max(1, Math.min(6, Math.floor(cores/2)));
