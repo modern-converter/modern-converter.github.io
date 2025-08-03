@@ -551,6 +551,20 @@ function resetConverterState(){
   onFilesChanged();
 }
 
+function resetProgressPage(){
+  if(progressBar2) progressBar2.style.width = '0%';
+  if(progressText2) progressText2.textContent = '0%';
+  if(progressTitle) progressTitle.textContent = 'Pracujemy nad Twoimi plikami…';
+  if(downloadAllBtn){
+    downloadAllBtn.classList.add('disabled');
+    downloadAllBtn.setAttribute('aria-disabled','true');
+    downloadAllBtn.removeAttribute('href');
+    downloadAllBtn.removeAttribute('download');
+    downloadAllBtn.textContent = 'Pobierz';
+  }
+}
+
+
 function initRoutingHook(){
   // czekaj na zmianę strony, żeby zainicjalizować UI przy ładowaniu home
   window.addEventListener('page-changed', e=>{
@@ -577,6 +591,12 @@ function resetHome(){
   onFilesChanged(); // ukryje panel ustawień gdy nie ma plików
   setOverallProgress(0);
   resetProgressPage();
+}
+// Proste przełączenie między „page” sekcjami
+async function transitionPage(current, target) {
+  if (!current || !target) return;
+  current.classList.remove('active');
+  target.classList.add('active');
 }
 
 // Zmodyfikuj navigate, żeby przy wejściu na home zresetować jeśli pochodzi z innej strony:
