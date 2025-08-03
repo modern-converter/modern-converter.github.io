@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>File Tool — DARMOWY Konwerter plików online | Konwersja obrazów, audio, dokumentów i wideo lokalnie</title>
+  <meta name="description" content="Filetool to szybki, darmowy i bezpieczny konwerter plików online. Konwertuj obrazy, audio, dokumenty, archiwa i wideo lokalnie w przeglądarce — bez wysyłania plików na serwer.">
+  <link rel="canonical" href="https://filetool.pl/">
+  <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1">
+  <meta name="keywords" content="konwerter plików, konwerter obrazów, konwersja audio, pdf online, webp, avif, webm, docx do pdf, jpg do png, wav do mp3, kompresja zdjęć, przeglądarkowy konwerter, bezpieczna konwersja, offline, prywatność, csv do xlsx, markdown do pdf, mp4 do webm, gif tworzenie, zip online, tar, md do html">
+  <link rel="icon" href="#" id="dynamic-favicon">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- banner zgody zostanie wstrzyknięty przez consent.js -->
+  <div class="bg-orbs" aria-hidden="true"></div>
+
+  <header class="nav" role="navigation" aria-label="Nawigacja główna">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <span>File Tool</span>
+    </div>
+    <nav class="links" aria-label="Linki">
+      <a class="chip" href="/">Konwerter</a>
+      <a class="chip" href="/about.html">O projekcie</a>
+      <a class="chip" href="/security.html">Bezpieczeństwo</a>
+      <a class="chip" href="/help.html">Pomoc</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div class="app">
+
+      <section class="hero">
+        <h1>DARMOWY Konwerter plików FileTool</h1>
+        <p>Konwertuj obrazy, audio, dokumenty, archiwa i wideo bezpośrednio w przeglądarce. Zero wysyłania plików — pełna prywatność.</p>
+        <p class="ghost" style="margin-top:6px">Szybka i bezpieczna konwersja online • 100% lokalnie • Bez konta</p>
+        <p class="ghost" style="margin-top:6px">Obsługiwane formaty: PNG, JPG, JPEG, WebP, AVIF, GIF, MP4, WebM, MOV, WAV, MP3, M4A, OGG, FLAC, TXT, MD, RTF, PDF, CSV, JSON, ZIP (lite) i inne.</p>
+      </section>
+
+      <section class="page active" id="page-home" aria-label="Konwerter">
+        <div id="home-grid">
+          <section class="panel" aria-label="Przesyłanie">
+            <div class="title"><span class="dot"></span> Prześlij pliki</div>
+            <div id="drop" class="drop" tabindex="0" role="button" aria-label="Przeciągnij i upuść pliki lub wybierz z dysku">
+              <input id="fileInput" type="file" multiple aria-label="Wybór plików">
+              <div class="big">Przeciągnij i upuść pliki tutaj</div>
+              <div class="small">albo</div>
+              <div class="btn">Przeglądaj pliki</div>
+              <div class="row" style="justify-content:center; gap:8px; margin-top:6px">
+                <span class="status ok">Lokalna konwersja</span>
+                <span class="status">Brak limitów chmury</span>
+              </div>
+              <div class="row" id="limitInfo" style="justify-content:center; gap:8px; margin-top:6px">
+                <span class="status">Automatyczny limit urządzenia</span>
+              </div>
+            </div>
+            <div class="file-list" id="fileList" aria-live="polite"></div>
+          </section>
+
+          <section class="panel" id="settings-panel" aria-label="Ustawienia">
+            <div class="title"><span class="dot"></span> Ustaw format</div>
+            <div class="format-selector" aria-label="Wybierz kategorię i format">
+              <div class="format-groups" id="formatGroups" role="tablist" aria-label="Kategorie"></div>
+              <div class="format-options" id="formatOptions" role="radiogroup" aria-label="Format wyjściowy"></div>
+              <div class="convert-wrap">
+                <button id="convertBtn" class="btn" aria-label="Rozpocznij konwersję">Konwertuj</button>
+              </div>
+              <div class="row" id="inline-progress-row" style="margin-top:6px">
+                <div class="prog" style="flex:1"><i id="progressBar" style="width:0%"></i></div>
+                <span id="progressText" style="min-width:110px; text-align:right">0%</span>
+                <button id="clearBtn" class="btn secondary" aria-label="Wyczyść listę">Wyczyść</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel" id="results-section" aria-label="Wyniki">
+            <div class="title"><span class="dot"></span> Wyniki</div>
+            <div class="file-list" id="resultList"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="page" id="page-progress" aria-label="Trwa konwersja">
+        <section class="panel">
+          <div class="title"><span class="dot"></span> Konwersja</div>
+          <div class="progress-wrap">
+            <div class="big-title" id="progressTitle">Pracujemy nad Twoimi plikami…</div>
+            <div class="row">
+              <div class="prog" style="flex:1"><i id="progressBar2" style="width:0%"></i></div>
+              <span id="progressText2" style="min-width:110px; text-align:right">0%</span>
+            </div>
+            <div class="btn-row">
+              <a id="downloadAll" class="btn" download>Pobierz</a>
+              <button id="convertMore" class="btn secondary">Wróć</button>
+            </div>
+            <div class="ghost" id="progressHint">Pozostaw kartę otwartą — konwersja odbywa się lokalnie. Po pobraniu możesz wrócić i zacząć od nowa.</div>
+          </div>
+        </section>
+      </section>
+
+      <footer>
+        <span>Działa w 100% lokalnie • Brak wysyłania plików</span>
+        <span>Prosty interfejs: najpierw prześlij • potem wybierz • konwertuj</span>
+        <span><a href="/privacy.html">Polityka prywatności</a></span>
+        <span><a href="/terms.html">Regulamin</a></span>
+        <span><a href="/contact.html">Kontakt</a></span>
+      </footer>
+    </div>
+  </main>
+
+  <script src="consent.js" defer></script>
+  <script src="converter.js" defer></script>
+</body>
+</html>
