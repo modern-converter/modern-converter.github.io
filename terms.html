@@ -2,64 +2,106 @@
 <html lang="pl">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Regulamin — FileTool</title>
-  <meta name="description" content="Regulamin korzystania z FileTool — zasady użycia, wyłączenia odpowiedzialności, prawa użytkownika.">
-  <link rel="canonical" href="https://filetool.pl/terms.html">
-  <meta name="robots" content="index,follow">
-  <style>
-    body{
-      margin:0; font-family: system-ui,-apple-system,BlinkMacSystemFont,sans-serif; background:#0f1525; color:#f0f4ff;
-      padding:0 12px 80px;
-    }
-    .container{max-width:900px; margin:0 auto; padding:40px 0;}
-    h1{font-size:2.4rem; margin-bottom:8px;}
-    h2{margin-top:32px; font-size:1.6rem;}
-    p{line-height:1.5; margin:12px 0;}
-    ul{margin:8px 0 16px; padding-left:20px;}
-    a{color:#8abaff; text-decoration:underline;}
-    footer{margin-top:60px; font-size:12px; display:flex; flex-wrap:wrap; gap:10px; justify-content:center; opacity:.9;}
-    .nav{display:flex; gap:12px; flex-wrap:wrap; margin-bottom:24px;}
-    .nav a{color:#f0f4ff; text-decoration:none; background:rgba(255,255,255,.05); padding:6px 14px; border-radius:999px; font-weight:600;}
-  </style>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Regulamin korzystania z FileTool.">
+  <link rel="stylesheet" href="style/style.css" />
 </head>
 <body>
-  <div class="container">
-    <nav class="nav" aria-label="Nawigacja">
-      <a href="/">Konwerter</a>
-      <a href="/about.html">O projekcie</a>
-      <a href="/privacy.html">Polityka prywatności</a>
-      <a href="/contact.html">Kontakt</a>
+  <header class="nav">
+    <div class="brand"><span>File Tool</span></div>
+    <nav class="links">
+      <a class="chip" href="index.html">Konwerter</a>
+      <a class="chip active" href="terms.html" aria-current="page">Regulamin</a>
+      <a class="chip" href="privacy.html">Polityka prywatności</a>
+      <a class="chip" href="contact.html">Kontakt</a>
     </nav>
+  </header>
 
-    <h1>Regulamin</h1>
-    <p>Proszę uważnie przeczytać niniejszy regulamin przed skorzystaniem z serwisu FileTool. Korzystając z serwisu, akceptujesz poniższe warunki.</p>
+  <main class="content-grid" style="max-width:900px; margin:0 auto; padding:32px;">
+    <div class="panel">
+      <div class="title"><span class="dot"></span> Regulamin</div>
+      <p>Korzystając z FileTool zgadzasz się na poniższe warunki:</p>
+      <ul>
+        <li>Narzędzie działa lokalnie — nie ponosimy odpowiedzialności za treści przetwarzane przez użytkownika.</li>
+        <li>Nie gwarantujemy, że konwersje zadziałają dla każdego pliku lub formatu.</li>
+        <li>Użytkownik odpowiada za zgodność przetwarzanych plików z obowiązującym prawem.</li>
+        <li>Nie zbieramy danych użytkownika bez zgody (szczegóły w Polityce prywatności).</li>
+      </ul>
+      <p>Używasz narzędzia na własną odpowiedzialność.</p>
+      <div style="margin-top:24px; display:flex; gap:12px; flex-wrap:wrap;">
+        <a href="index.html">Konwerter</a>
+        <a href="privacy.html">Polityka prywatności</a>
+        <a href="contact.html">Kontakt</a>
+      </div>
+    </div>
+  </main>
 
-    <h2>1. Usługa</h2>
-    <p>FileTool to narzędzie działające lokalnie w przeglądarce służące do konwersji plików. Nie przesyłamy plików użytkownika na zewnętrzne serwery (chyba że użytkownik użyje funkcji, która explicitnie to robi – w obecnej wersji nie ma takiej funkcji).</p>
+  <!-- cookie consent banner -->
+  <script>
+  (function(){
+    function createBanner(){
+      const banner = document.createElement('div');
+      banner.id='cookieBanner';
+      banner.setAttribute('aria-label','Informacja o ciasteczkach');
+      banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:rgba(20,24,35,.95);color:#f0f4ff;padding:16px 24px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;font-size:14px;z-index:9998;border-top:1px solid rgba(255,255,255,.08);';
+      banner.innerHTML = `
+        <div class="text" style="flex:1;min-width:220px;">
+          Ta strona używa Google AdSense, który może korzystać z plików cookie do personalizacji reklam. Możesz zaakceptować reklamy personalizowane albo tylko podstawowe (bez personalizacji). Szczegóły w <a href="/privacy.html" style="color:#cce0ff;text-decoration:underline;">Polityce prywatności</a>.
+        </div>
+        <div style="display:flex; gap:8px;flex-wrap:wrap;">
+          <button id="acceptPersonalized" style="padding:8px 16px;border-radius:999px;border:none;cursor:pointer;font-weight:600;background:linear-gradient(180deg,rgba(79,195,247,0.9),rgba(167,139,250,0.75));color:white;">Akceptuję personalizowane</button>
+          <button id="acceptNonPersonalized" style="padding:8px 16px;border-radius:999px;border:none;cursor:pointer;font-weight:600;background:rgba(255,255,255,.08);color:white;">Tylko podstawowe</button>
+          <button id="closeBanner" style="padding:8px 16px;border-radius:999px;border:none;cursor:pointer;font-weight:600;background:rgba(255,255,255,.08);color:white;margin-left:4px;">Zamknij</button>
+        </div>
+      `;
+      document.body.appendChild(banner);
+      return banner;
+    }
 
-    <h2>2. Ograniczenia</h2>
-    <p>Użytkownik korzysta z FileTool na własne ryzyko. Nie gwarantujemy, że konwersje zawsze zakończą się pomyślnie, ani że narzędzie będzie działać bez przerw.</p>
+    function loadAdSense(nonPersonalized=false){
+      if(window._adsLoaded) return;
+      window._adsLoaded = true;
+      if(nonPersonalized){
+        window.adsbygoogle = window.adsbygoogle || [];
+        window.adsbygoogle.requestNonPersonalizedAds = 1;
+      }
+      const s = document.createElement('script');
+      s.async = true;
+      s.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1712836182508924";
+      s.crossOrigin = "anonymous";
+      document.head.appendChild(s);
+    }
 
-    <h2>3. Odpowiedzialność</h2>
-    <p>FileTool nie ponosi odpowiedzialności za jakiekolwiek szkody wynikłe z używania serwisu, utraty danych czy nieprawidłowych wyników konwersji.</p>
+    function applyConsent(consent){
+      if(consent === 'personalized'){
+        loadAdSense(false);
+      } else if(consent === 'non_personalized'){
+        loadAdSense(true);
+      }
+      localStorage.setItem('ft_cookie_consent', consent);
+      const banner = document.getElementById('cookieBanner');
+      if(banner) banner.style.display='none';
+    }
 
-    <h2>4. Reklamy</h2>
-    <p>Serwis może wyświetlać reklamy za pośrednictwem Google AdSense. O personalizacji reklam decyduje użytkownik poprzez mechanizm zgody.</p>
-
-    <h2>5. Zmiany</h2>
-    <p>Zastrzegamy sobie prawo do zmiany regulaminu w dowolnym czasie. Zmiany wchodzą w życie po opublikowaniu ich na tej stronie.</p>
-
-    <h2>6. Kontakt</h2>
-    <p>Pytania dotyczące regulaminu można kierować na adres: <a href="mailto:kontakt@filetool.pl">kontakt@filetool.pl</a></p>
-
-    <footer>
-      <span><a href="/privacy.html">Polityka prywatności</a></span>
-      <span><a href="/terms.html">Regulamin</a></span>
-      <span><a href="/contact.html">Kontakt</a></span>
-      <span>© FileTool</span>
-    </footer>
-  </div>
-  <script src="consent.js" defer></script>
+    document.addEventListener('DOMContentLoaded', ()=>{
+      const existing = document.getElementById('cookieBanner');
+      let banner = existing;
+      if(!banner){
+        banner = createBanner();
+      }
+      document.getElementById('acceptPersonalized').addEventListener('click', ()=> applyConsent('personalized'));
+      document.getElementById('acceptNonPersonalized').addEventListener('click', ()=> applyConsent('non_personalized'));
+      document.getElementById('closeBanner').addEventListener('click', ()=>{
+        if(banner) banner.style.display='none';
+        setTimeout(()=> loadAdSense(false),300);
+      });
+      const saved = localStorage.getItem('ft_cookie_consent');
+      if(saved){
+        applyConsent(saved);
+      }
+    });
+  })();
+  </script>
 </body>
 </html>
