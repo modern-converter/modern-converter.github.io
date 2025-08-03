@@ -565,3 +565,46 @@ function initRoutingHook(){
 
 // start
 initRoutingHook();
+
+// --- (na górze pliku: importy i wcześniejsza część pozostają bez zmian) ---
+
+// Dodaj nową pomocniczą funkcję:
+function resetHome(){
+  files = [];
+  results = [];
+  renderFileList();
+  renderResults();
+  onFilesChanged(); // ukryje panel ustawień gdy nie ma plików
+  setOverallProgress(0);
+  resetProgressPage();
+}
+
+// Zmodyfikuj navigate, żeby przy wejściu na home zresetować jeśli pochodzi z innej strony:
+async function navigate(route){
+  const current = document.querySelector('.page.active');
+  const target = document.getElementById('page-'+route);
+  // update chips
+  $$('.chip[data-route]').forEach(c=>{
+    if(c.getAttribute('data-route')===route){
+      c.classList.add('active');
+      c.setAttribute('aria-current','page');
+    }else{
+      c.classList.remove('active');
+      c.removeAttribute('aria-current');
+    }
+  });
+  // jeśli ktoś przechodzi na home przez nawigację - zresetuj
+  if(route === 'home'){
+    resetHome();
+  }
+  // perform animated switch
+  await transitionPage(current, target);
+  try{ history.replaceState({}, '', '#'+route); }catch{}
+}
+
+// Zmieniony handler dla przycisku "Wróć":
+convertMoreBtn.addEventListener('click', ()=>{
+  resetHome(); // usuń pliki, wyniki, progress
+  navigate('home');
+  applyCompatibilityLocks();
+});
