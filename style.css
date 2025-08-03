@@ -225,3 +225,21 @@ footer{display:flex; justify-content:center; gap:10px; flex-wrap:wrap; opacity:.
 #settings-panel{ display:none; }
 /* Also hide inline progress / results / clear initially */
 #inline-progress-row, #results-section, #clearBtn { display:none !important; }
+
+/* Subtaby w sekcji bezpieczeństwa */
+.security-subnav .subtab{
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid hsl(0 0% 100%/.18);
+  background: linear-gradient(180deg, hsl(0 0% 100%/.12), hsl(0 0% 100%/.05));
+  cursor: pointer;
+  font-weight:600;
+  transition:.2s;
+}
+.security-subnav .subtab[aria-pressed="true"]{
+  background: linear-gradient(180deg, hsl(var(--accent)/.85), hsl(var(--accent)/.7));
+  border-color: transparent;
+  box-shadow: 0 6px 18px hsl(var(--accent)/.35);
+  color: white;
+}
+.sec-panel{ margin-top:8px; }
