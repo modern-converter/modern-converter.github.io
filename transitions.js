@@ -7,7 +7,6 @@ async function transitionTo(path, { push = true } = {}) {
   if (!contentEl) { location.href = path; return; }
   if (location.pathname === path) return;
 
-  // animate out
   contentEl.classList.add('page-exit');
   await new Promise(r => setTimeout(r, 250));
 
@@ -20,13 +19,9 @@ async function transitionTo(path, { push = true } = {}) {
     const newContent = doc.querySelector(containerSelector);
     if (!newContent) { location.href = path; return; }
 
-    // replace content
     contentEl.innerHTML = newContent.innerHTML;
-
-    // update title
     document.title = doc.title;
 
-    // update active nav/chip
     document.querySelectorAll('.chip').forEach(c => {
       const href = c.getAttribute('href') || c.dataset.route;
       if (!href) return;
@@ -42,7 +37,6 @@ async function transitionTo(path, { push = true } = {}) {
     });
 
     if (push) history.pushState({}, '', path);
-    // animate in
     contentEl.classList.remove('page-exit');
     contentEl.classList.add('page-enter');
     requestAnimationFrame(() => {
@@ -52,7 +46,7 @@ async function transitionTo(path, { push = true } = {}) {
       contentEl.classList.remove('page-enter', 'page-enter-active');
     }, 300);
   } catch (e) {
-    location.href = path; // fallback pełne przejście
+    location.href = path;
   }
 }
 
@@ -62,12 +56,11 @@ function attachLinkHandlers() {
     a._ajaxBound = true;
     a.addEventListener('click', e => {
       const href = a.getAttribute('href');
-      if (!href.startsWith('/')) return; // zewnętrzne
+      if (!href.startsWith('/')) return;
       e.preventDefault();
       transitionTo(href);
     });
 
-    // prefetch on hover
     let prefetching = false;
     a.addEventListener('mouseover', () => {
       const href = a.getAttribute('href');
@@ -85,7 +78,6 @@ window.addEventListener('popstate', () => {
 
 document.addEventListener('DOMContentLoaded', () => {
   attachLinkHandlers();
-  // delegate for dynamic content replacement
   const observer = new MutationObserver(() => attachLinkHandlers());
   observer.observe(document.body, { childList: true, subtree: true });
 });
