@@ -1,0 +1,40 @@
+:root{
+  --bg1: 225 70% 3%;
+  --glass: 215 40% 95%;
+  --glass-2: 215 40% 90%;
+  --accent: 195 100% 50%;
+  --accent-2: 280 100% 70%;
+  --ok: 150 70% 45%;
+  --warn: 35 100% 50%;
+  --err: 0 80% 55%;
+  --shadow: 0 0% 0% / 0.35;
+  --blur: 18px;
+  --radius: 18px;
+  --radius-lg: 26px;
+  --ring: 0 0% 100%/0.25;
+  --transition: .35s cubic-bezier(.22,.11,.24,1);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial; background:
+    radial-gradient(1200px 800px at 10% 10%, hsl(200 80% 10% / .55), transparent 60%),
+    radial-gradient(1200px 800px at 90% 10%, hsl(280 60% 12% / .50), transparent 60%),
+    radial-gradient(1200px 800px at 50% 100%, hsl(190 80% 12% / .50), transparent 60%),
+    linear-gradient(180deg, hsl(var(--bg1)), hsl(230 70% 6%)); color:hsl(0 0% 98%); overflow-x:hidden;}
+.bg-orbs{
+  position: fixed; inset: -20vmax -20vmax auto auto;
+  width: 140vmax; height: 140vmax;
+  pointer-events:none; filter: blur(60px) saturate(120%);
+  opacity:.65; mix-blend-mode: screen;
+  animation: float 20s ease-in-out infinite alternate;
+  background:
+    radial-gradient(circle at 20% 30%, hsl(var(--accent)/.35), transparent 25%),
+    radial-gradient(circle at 70% 40%, hsl(var(--accent-2)/.35), transparent 28%),
+    radial-gradient(circle at 50% 70%, hsl(160 100% 50%/.25), transparent 30%);
+}
+@keyframes float{
+  from{transform: translate3d(0,0,0) rotate(0deg)}
+  to{transform: translate3d(2vmax,-2vmax,0) rotate(8deg)}
+}
+#toast-container{position:fixed; right:16px; bottom:16px; z-index:10000; display:flex; flex-direction:column; gap:6px;}
+.toast{padding:10px 16px; border-radius:999px; backdrop-filter: blur(8px); background: rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,.18); color:white; font-size:14px; display:inline-block; transition: opacity .3s;}
