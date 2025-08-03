@@ -44,6 +44,7 @@ body{
   from{transform: translate3d(0,0,0) rotate(0deg)}
   to{transform: translate3d(2vmax,-2vmax,0) rotate(8deg)}
 }
+
 .nav{
   position: sticky; top:0; z-index:10;
   display:flex; align-items:center; gap:14px;
@@ -80,6 +81,7 @@ body{
   border-color: transparent;
 }
 .chip:active{ transform: translateY(1px) }
+
 .container{display:grid;place-items:center;padding: clamp(12px, 2.8vw, 40px)}
 .app{width: min(1040px, 100%);display:grid;gap:22px}
 .hero{display:grid;gap:10px;text-align:center}
@@ -90,6 +92,7 @@ body{
   filter: drop-shadow(0 4px 24px hsl(200 100% 60% / .15));
 }
 .hero p{margin:0 auto;max-width: 68ch;color: hsl(0 0% 90%);opacity:.9;padding: 0 8px}
+
 .panel{
   position: relative; display:grid; gap: 14px;
   padding: clamp(14px, 2.8vw, 28px);
@@ -106,6 +109,7 @@ body{
   background: radial-gradient(circle at 30% 30%, hsl(var(--accent)/1), hsl(var(--accent)/.5));
   box-shadow: 0 0 22px hsl(var(--accent)/.8), 0 0 4px 1px hsl(0 0% 100% / .2) inset;
 }
+
 .drop{
   position: relative;border: 1px dashed hsl(0 0% 100% / .25);
   border-radius: var(--radius);padding: clamp(14px, 2.2vw, 24px);min-height: 200px;
@@ -132,10 +136,12 @@ input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer}
 .btn:active{ transform: translateY(1px); filter: saturate(120%) }
 .btn.secondary{ background: linear-gradient(180deg, hsl(0 0% 100% / .09), hsl(0 0% 100% / .04)); color: hsl(0 0% 98%) }
 .row{display:flex; gap:10px; flex-wrap: wrap; align-items:center}
+
 footer{display:flex; justify-content:center; gap:10px; flex-wrap:wrap; opacity:.9; font-size:12px; padding: 6px 0 24px}
-footer a{color:inherit; text-decoration:underline; font-weight:600}
+
 .page{ display:none }
 .page.active{ display:block }
+
 .format-selector{ display:grid; gap:10px; }
 .format-groups{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
 .fchip{
@@ -169,11 +175,15 @@ footer a{color:inherit; text-decoration:underline; font-weight:600}
 .format-option[disabled]{ opacity:.45; cursor:not-allowed; filter: grayscale(.3) }
 .convert-wrap{ display:grid; place-items:center; margin-top:8px; }
 #convertBtn{ font-size: clamp(16px, 2.6vw, 18px); padding: 16px 28px; min-width: 240px; }
+
+/* SEO sections */
 .content-grid{display:grid; gap:16px; grid-template-columns: 1.1fr 1fr}
 @media (max-width: 980px){ .content-grid{grid-template-columns: 1fr} }
 .kpi{display:grid; grid-template-columns: repeat(3, 1fr); gap:10px}
 @media (max-width: 560px){ .kpi{grid-template-columns: 1fr 1fr} }
 .kpi .panel{ text-align:center; padding:18px }
+
+/* Progress page */
 #page-progress .progress-wrap{display:grid; gap:14px}
 .big-title{font-weight:800; font-size: clamp(20px, 4.6vw, 28px)}
 .btn-row{ display:flex; gap:10px; flex-wrap:wrap }
@@ -187,6 +197,8 @@ footer a{color:inherit; text-decoration:underline; font-weight:600}
   box-shadow: 0 0 20px hsl(var(--accent)/.55);
   transition: width .2s linear;
 }
+
+/* Layout helpers */
 #home-grid{ display:grid; gap:24px; }
 .ghost{ opacity:.7 }
 .file-list{display:grid; gap:10px; margin-top:6px; max-height: 240px; overflow:auto; padding-right:4px}
@@ -208,5 +220,8 @@ footer a{color:inherit; text-decoration:underline; font-weight:600}
 .ok{ background: hsl(var(--ok)/.15); border-color: hsl(var(--ok)/.35) }
 .warn{ background: hsl(var(--warn)/.15); border-color: hsl(var(--warn)/.35) }
 .err{ background: hsl(var(--err)/.15); border-color: hsl(var(--err)/.35) }
+
+/* Hide settings initially per request */
 #settings-panel{ display:none; }
+/* Also hide inline progress / results / clear initially */
 #inline-progress-row, #results-section, #clearBtn { display:none !important; }
