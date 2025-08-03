@@ -3,16 +3,19 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>File Tool — DARMOWY Konwerter plików online | Konwersja obrazów, audio, dokumentów i wideo lokalnie</title>
-  <meta name="description" content="Filetool to szybki, darmowy i bezpieczny konwerter plików online. Konwertuj obrazy, audio, dokumenty, archiwa i wideo lokalnie w przeglądarce — bez wysyłania plików na serwer. Obsługa: PNG, JPG, WebP, AVIF, PDF, TXT, MD, CSV, JSON, MP3, WAV, OGG, FLAC, MP4, WebM, GIF i więcej.">
+  <title>File Tool — DARMOWY Konwerter plików online</title>
+  <meta name="description" content="Filetool to szybki, darmowy i bezpieczny konwerter plików online. Konwertuj obrazy, audio, dokumenty, archiwa i wideo lokalnie w przeglądarce — bez wysyłania plików na serwer.">
   <link rel="canonical" href="https://filetool.pl">
-  <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1">
-  <meta name="keywords" content="konwerter plików, konwerter obrazów, konwersja audio, pdf online, webp, avif, webm, docx do pdf, jpg do png, wav do mp3, kompresja zdjęć, przeglądarkowy konwerter, bezpieczna konwersja, offline, prywatność, csv do xlsx, markdown do pdf, mp4 do webm, gif tworzenie, zip online, tar, md do html">
+  <meta name="robots" content="index,follow">
+  <link rel="stylesheet" href="style/base.css">
+  <link rel="stylesheet" href="style/layout.css">
+  <link rel="stylesheet" href="style/pages/home.css">
+  <link rel="stylesheet" href="style/pages/about.css">
+  <link rel="stylesheet" href="style/pages/security.css">
   <link rel="icon" href="#" id="dynamic-favicon">
-  <link rel="stylesheet" href="style.css">
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1712836182508924" crossorigin="anonymous"></script>
 </head>
 <body>
+  <div id="consent-root"></div>
   <div class="bg-orbs" aria-hidden="true"></div>
 
   <header class="nav" role="navigation" aria-label="Nawigacja główna">
@@ -21,195 +24,29 @@
       <span>File Tool</span>
     </div>
     <nav class="links" aria-label="Linki">
-      <a class="chip" data-route="home" href="#home" aria-current="page">Konwerter</a>
-      <a class="chip" data-route="about" href="#about">O projekcie</a>
-      <a class="chip" data-route="security" href="#security">Bezpieczeństwo</a>
+      <button class="chip" data-route="home" aria-current="page">Konwerter</button>
+      <button class="chip" data-route="about">O projekcie</button>
+      <button class="chip" data-route="security">Bezpieczeństwo</button>
     </nav>
   </header>
 
   <main class="container">
     <div class="app">
-
-      <section class="hero">
-        <h1>DARMOWY Konwerter plików FileTool</h1>
-        <p>Konwertuj obrazy, audio, dokumenty, archiwa i wideo bezpośrednio w przeglądarce. Zero wysyłania plików — pełna prywatność.</p>
-        <p class="ghost" style="margin-top:6px">Szybka i bezpieczna konwersja online • 100% lokalnie • Bez konta</p>
-        <p class="ghost" style="margin-top:6px">Obsługiwane formaty: PNG, JPG, JPEG, WebP, AVIF, GIF, MP4, WebM, MOV, WAV, MP3, M4A, OGG, FLAC, TXT, MD, RTF, PDF, CSV, JSON, ZIP (lite) i inne.</p>
-      </section>
-
-      <!-- Konwerter -->
-      <section class="page active" id="page-home" aria-label="Konwerter">
-        <div id="home-grid">
-          <section class="panel" aria-label="Przesyłanie">
-            <div class="title"><span class="dot"></span> Prześlij pliki</div>
-            <div id="drop" class="drop" tabindex="0" role="button" aria-label="Przeciągnij i upuść pliki lub wybierz z dysku">
-              <input id="fileInput" type="file" multiple aria-label="Wybór plików">
-              <div class="big">Przeciągnij i upuść pliki tutaj</div>
-              <div class="small">albo</div>
-              <div class="btn">Przeglądaj pliki</div>
-              <div class="row" style="justify-content:center; gap:8px; margin-top:6px">
-                <span class="status ok">Lokalna konwersja</span>
-                <span class="status">Brak limitów chmury</span>
-              </div>
-              <div class="row" id="limitInfo" style="justify-content:center; gap:8px; margin-top:6px">
-                <span class="status">Automatyczny limit urządzenia</span>
-              </div>
-            </div>
-            <div class="file-list" id="fileList" aria-live="polite"></div>
-          </section>
-
-          <section class="panel" id="settings-panel" aria-label="Ustawienia">
-            <div class="title"><span class="dot"></span> Ustaw format</div>
-            <div class="format-selector" aria-label="Wybierz kategorię i format">
-              <div class="format-groups" id="formatGroups" role="tablist" aria-label="Kategorie"></div>
-              <div class="format-options" id="formatOptions" role="radiogroup" aria-label="Format wyjściowy"></div>
-              <div class="convert-wrap">
-                <button id="convertBtn" class="btn" aria-label="Rozpocznij konwersję">Konwertuj</button>
-              </div>
-              <div class="row" id="inline-progress-row" style="margin-top:6px">
-                <div class="prog" style="flex:1"><i id="progressBar" style="width:0%"></i></div>
-                <span id="progressText" style="min-width:110px; text-align:right">0%</span>
-                <button id="clearBtn" class="btn secondary" aria-label="Wyczyść listę">Wyczyść</button>
-              </div>
-            </div>
-          </section>
-
-          <section class="panel" id="results-section" aria-label="Wyniki">
-            <div class="title"><span class="dot"></span> Wyniki</div>
-            <div class="file-list" id="resultList"></div>
-          </section>
-        </div>
-      </section>
-
-      <!-- Postęp -->
-      <section class="page" id="page-progress" aria-label="Trwa konwersja">
-        <section class="panel">
-          <div class="title"><span class="dot"></span> Konwersja</div>
-          <div class="progress-wrap">
-            <div class="big-title" id="progressTitle">Pracujemy nad Twoimi plikami…</div>
-            <div class="row">
-              <div class="prog" style="flex:1"><i id="progressBar2" style="width:0%"></i></div>
-              <span id="progressText2" style="min-width:110px; text-align:right">0%</span>
-            </div>
-            <div class="btn-row">
-              <a id="downloadAll" class="btn" download>Pobierz</a>
-              <button id="convertMore" class="btn secondary">Wróć</button>
-            </div>
-            <div class="ghost" id="progressHint">Pozostaw kartę otwartą — konwersja odbywa się lokalnie. Po pobraniu możesz wrócić i zacząć od nowa.</div>
-          </div>
-        </section>
-      </section>
-
-      <!-- O projekcie -->
-      <section class="page" id="page-about" aria-label="O projekcie">
-        <div class="content-grid">
-          <div class="panel">
-            <div class="title"><span class="dot"></span> O Filetool</div>
-            <p>Filetool to prywatny, działający na urządzeniu konwerter plików. Działa całkowicie w przeglądarce, używając Web API i opcjonalnie silnika FFmpeg do przetwarzania bez wysyłania danych.</p>
-            <p>Stawiamy na bezpieczeństwo, szybkość i prostotę. Interfejs jest intuicyjny: prześlij plik, dopiero potem wybierz format i kliknij „Konwertuj”. Wynik pobierzesz na osobnej stronie postępu.</p>
-            <div class="kpi">
-              <div class="panel"><div class="big" style="font-weight:800; font-size:22px">100% Lokalnie</div><div class="subtle">Brak wysyłek</div></div>
-              <div class="panel"><div class="big" style="font-weight:800; font-size:22px">Adaptacyjnie</div><div class="subtle">Bezpieczne limity</div></div>
-              <div class="panel"><div class="big" style="font-weight:800; font-size:22px">Standardy</div><div class="subtle">Web API + FFmpeg</div></div>
-            </div>
-          </div>
-          <div class="panel">
-            <div class="title"><span class="dot"></span> Dlaczego warto</div>
-            <ul>
-              <li>Prywatność: nic nie trafia do chmury.</li>
-              <li>Uniwersalność: obsługa popularnych formatów grafiki, audio, wideo i dokumentów.</li>
-              <li>Wydajność: brak uploadu, szybkie działanie.</li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      <!-- Bezpieczeństwo + polityka/regulamin/kontakt -->
-      <section class="page" id="page-security" aria-label="Bezpieczeństwo">
-        <div class="panel">
-          <div class="title"><span class="dot"></span> Bezpieczeństwo i informacje</div>
-          <div class="security-subnav" role="tablist" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">
-            <button class="subtab" data-sub="security" aria-pressed="true" type="button">Bezpieczeństwo</button>
-            <button class="subtab" data-sub="privacy" aria-pressed="false" type="button">Polityka prywatności</button>
-            <button class="subtab" data-sub="terms" aria-pressed="false" type="button">Regulamin</button>
-            <button class="subtab" data-sub="contact" aria-pressed="false" type="button">Kontakt</button>
-          </div>
-
-          <div class="security-content">
-            <div class="sec-panel" id="sec-security">
-              <div class="content-grid">
-                <div class="panel">
-                  <div class="title"><span class="dot"></span> Bezpieczeństwo i prywatność</div>
-                  <ul>
-                    <li>Pliki nie opuszczają urządzenia. Wszystko dzieje się w przeglądarce.</li>
-                    <li>Brak kont i logowania.</li>
-                    <li>Heurystyki pamięci dbają o responsywność urządzenia.</li>
-                    <li>Piaskownica przeglądarki — brak dodatkowych uprawnień.</li>
-                  </ul>
-                </div>
-                <div class="panel">
-                  <div class="title"><span class="dot"></span> Najlepsze praktyki</div>
-                  <ul>
-                    <li>Wybieraj nowoczesne formaty (WebP/AVIF dla obrazów, WebM dla wideo).</li>
-                    <li>Redukuj rozdzielczość/bitrate, by przyspieszyć konwersję na słabszych urządzeniach.</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            <div class="sec-panel" id="sec-privacy" style="display:none">
-              <div class="panel">
-                <div class="title"><span class="dot"></span> Polityka prywatności</div>
-                <p>Twoja prywatność jest najważniejsza. Wszystkie pliki przetwarzane są lokalnie w przeglądarce i nie są wysyłane nigdzie poza Twoje urządzenie. Nie zbieramy danych osobowych, nie wymagamy logowania ani kont.</p>
-                <p>Wszystkie operacje odbywają się po stronie klienta. Możesz używać FileTool anonimowo i bez obaw o wyciek zawartości plików.</p>
-              </div>
-            </div>
-
-            <div class="sec-panel" id="sec-terms" style="display:none">
-              <div class="panel">
-                <div class="title"><span class="dot"></span> Regulamin</div>
-                <p>Używając FileTool akceptujesz, że korzystasz z niego na własną odpowiedzialność. Nie ponosimy odpowiedzialności za zawartość plików, które przesyłasz ani za jakiekolwiek szkody wynikłe z ich konwersji.</p>
-                <p>Nie wolno używać usługi do naruszania praw autorskich ani do przesyłania materiałów niezgodnych z prawem. Zastrzegamy sobie prawo do wprowadzenia zmian w regulaminie bez uprzedzenia.</p>
-              </div>
-            </div>
-
-            <div class="sec-panel" id="sec-contact" style="display:none">
-              <div class="panel">
-                <div class="title"><span class="dot"></span> Kontakt</div>
-                <p>Masz pytanie, sugestię albo problem? Napisz do nas na adres: <b>support@filetool.pl</b></p>
-                <p>Możesz też śledzić rozwój projektu na kanałach społecznościowych (jeśli są dostępne) lub zgłosić błąd przez formularz feedback.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Pomoc -->
-      <section class="page" id="page-help" aria-label="Pomoc">
-        <div class="panel">
-          <div class="title"><span class="dot"></span> Szybki start</div>
-          <ol>
-            <li>Przeciągnij i upuść pliki lub wybierz z dysku.</li>
-            <li>Wybierz format wyjściowy.</li>
-            <li>Kliknij „Konwertuj”. Otworzy się strona postępu z paskiem.</li>
-            <li>Po zakończeniu pobierz wynik lub wróć do startu (reset).</li>
-          </ol>
-        </div>
-        <div class="panel">
-          <div class="title"><span class="dot"></span> FAQ</div>
-          <p><b>Czy pliki są wysyłane do Internetu?</b> Nie — przetwarzamy lokalnie.</p>
-          <p><b>Dlaczego niektóre formaty mają dopisek „lite”?</b> To lekkie, zgodne substytuty tworzone w przeglądarce, gdy pełne kodowanie nie jest dostępne.</p>
-        </div>
-      </section>
-
+      <div id="page-home" class="page" aria-label="Konwerter"></div>
+      <div id="page-about" class="page" aria-label="O projekcie"></div>
+      <div id="page-security" class="page" aria-label="Bezpieczeństwo"></div>
       <footer>
-        <span>Działa w 100% lokalnie • Brak wysyłania plików</span>
-        <span>Prosty interfejs: najpierw prześlij • potem wybierz • konwertuj</span>
+        <span>100% lokalnie • Brak wysyłania plików</span>
+        <span>Prosty interfejs: dodaj plik → wybierz format → konwertuj</span>
       </footer>
-
     </div>
   </main>
 
+  <div id="toast-container"></div>
+
+  <!-- moduły -->
+  <script type="module" src="style/consent.js"></script>
+  <script type="module" src="style/ui.js"></script>
   <script type="module" src="konwerter/core.js"></script>
 </body>
 </html>
