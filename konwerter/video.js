@@ -1,89 +1,73 @@
-// video.js  — wersja BEZ FFmpeg (2025-08-04)
+// video.js  — bez FFmpeg
+import { convertAudio } from './audio.js';
 
-/**
- * Zwraca Promise z nagranym WebM lub oryginałem, jeżeli konwersja niemożliwa.
- * @param {File|Blob} file        wejściowy plik wideo
- * @param {string}    fmt         docelowy format ('webm' | 'mp4' | 'mov' | 'mkv')
- * @param {Object}    opt         { fps: 30 }
- * @returns {Promise<Blob>}
- */
-async function convertVideo(file, fmt, opt = {}) {
-  const target = (fmt || '').toLowerCase().replace(/-lite$/, '');
-  const srcExt = (file.name?.split('.').pop() || '').toLowerCase();
+/* jedyny natywny koder wideo (WebM)  */
+export const supportedVideoFormats = ['mp4','webm','mov','mkv','mp3','wav','webm-audio'];
 
-  /* 1) nic do roboty */
-  if (srcExt === target) return file.slice();
+async function convertVideo(file, fmt = 'webm') {
+  const tgt = fmt.toLowerCase();
+  const srcExt = (file.name?.split('.').pop()||'').toLowerCase();
 
-  /* 2) jedyny realny transkoder w przeglądarce → MediaRecorder → WebM */
-  if (target === 'webm' && MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')) {
-    try {
-      return await transcodeToWebm(file, opt.fps || 30);
-    } catch (err) {
-      console.warn('WebM transcode error, zwracam oryginał:', err);
-      return file.slice();
-    }
+  /* 1. Żądany audio-only → wytnij ścieżkę audio */
+  if (['mp3','wav','webm','webm-audio'].includes(tgt)) {
+    return extractAudio(file, tgt === 'webm-audio' ? 'webm' : tgt);
   }
 
-  /* 3) wszystkiego innego nie zrobimy bez FFmpeg */
-  console.warn(`Brak natywnego transkodera ${srcExt} → ${target}; zwracam oryginał.`);
+  /* 2. WebM wideo (canvas capture) */
+  if (tgt === 'webm') return mp4ToWebm(file);
+
+  /* 3. Brak natywnej transkodacji → zwracamy oryginał */
+  console.warn(`Transkodowanie ${srcExt} → ${tgt} wymaga FFmpeg; zwracam oryginał.`);
   return file.slice();
 }
+export { convertVideo as default };
 
-/* ─────────────────────────────────────────────────────────────── */
-/*        helpers – video → canvas → MediaRecorder (WebM)          */
-async function transcodeToWebm(file, fps) {
-  const blobURL = URL.createObjectURL(file);
-  const video   = Object.assign(document.createElement('video'), {
-    src: blobURL,
-    muted: true,
-    playsInline: true,
-    crossOrigin: 'anonymous',
-  });
-  await video.play().catch(()=>{});        // inicjalizacja, może zwrócić Promise
-  await new Promise(r => video.onloadeddata = r);
-
-  const { videoWidth: w, videoHeight: h } = video;
-  if (!w || !h) throw new Error('Nie można odczytać wymiarów wideo');
-
-  const canvas = document.createElement('canvas');
-  canvas.width = w; canvas.height = h;
-  const ctx = canvas.getContext('2d');
-
-  const stream = canvas.captureStream(fps);
-  const rec = new MediaRecorder(stream, {
-    mimeType: 'video/webm;codecs=vp9,opus',
-    audioBitsPerSecond: 128_000,
-    videoBitsPerSecond: 2_500_000,
-  });
-
-  const chunks = [];
-  rec.ondataavailable = e => e.data.size && chunks.push(e.data);
-
-  rec.start(100); // ms
-
-  return new Promise((resolve, reject) => {
-    video.onseeked = draw;
-    video.onended  = finish;
-    draw();
-
-    function draw() {
-      if (video.ended) return;
-      ctx.drawImage(video, 0, 0, w, h);
-      setTimeout(() => {
-        video.currentTime += 1 / fps;
-      }, 0);
-    }
-    function finish() {
-      rec.stop();
-      rec.onstop = () => {
-        URL.revokeObjectURL(blobURL);
-        resolve(new Blob(chunks, { type: 'video/webm' }));
-      };
-    }
-  });
+/* ——— helper: MP4 → WebM (jw. jak poprzednio) ——— */
+async function mp4ToWebm(file) {
+  const url=URL.createObjectURL(file);
+  const v=document.createElement('video');
+  v.src=url; v.muted=true; await v.play().catch(()=>{});
+  await new Promise(r=>v.onloadeddata=r);
+  const {videoWidth:w,videoHeight:h}=v;
+  const c=document.createElement('canvas'); c.width=w; c.height=h;
+  const ctx=c.getContext('2d');
+  const stream=c.captureStream(30);
+  const rec=new MediaRecorder(stream,{mimeType:'video/webm;codecs=vp9,opus'});
+  const chunks=[]; rec.ondataavailable=e=>e.data.size&&chunks.push(e.data); rec.start(100);
+  function step(){
+    if(v.ended){v.pause(); rec.stop(); return;}
+    ctx.drawImage(v,0,0,w,h);
+    requestAnimationFrame(step);
+  }
+  step();
+  await new Promise(r=>rec.onstop=r);
+  URL.revokeObjectURL(url);
+  return new Blob(chunks,{type:'video/webm'});
 }
 
-/* ─────────────────────────────────────────────────────────────── */
+/* ——— helper: wycinanie audio ——— */
+async function extractAudio(file, targetFmt) {
+  const url=URL.createObjectURL(file);
+  const v=document.createElement('video'); v.src=url; v.crossOrigin='anonymous';
+  const stream=v.captureStream();             // zawiera audio track (jeśli dekodowalne)
+  const [audioTrack]=stream.getAudioTracks();
+  if(!audioTrack){
+    console.warn('Brak ścieżki audio - zwracam oryginał.');
+    URL.revokeObjectURL(url);
+    return file.slice();
+  }
+  // nagraj audio do WebM
+  const rec=new MediaRecorder(new MediaStream([audioTrack]),
+    { mimeType:'audio/webm;codecs=opus', audioBitsPerSecond:128000 });
+  const chunks=[]; rec.ondataavailable=e=>e.data.size&&chunks.push(e.data);
+  await v.play().catch(()=>{}); rec.start();
+  await new Promise(r=>v.onended=r);
+  rec.stop(); await new Promise(r=>rec.onstop=r);
+  URL.revokeObjectURL(url);
+  const webmBlob=new Blob(chunks,{type:'audio/webm'});
+  if(targetFmt==='webm') return webmBlob;     // bez konwersji
+  // Konwertuj WebM→MP3/WAV przez convertAudio
+  return convertAudio(webmBlob,targetFmt);
+}
+
 export { convertVideo };
-export default convertVideo;
-export const supportedVideoFormats = ['webm'];  // bo na razie tylko to możemy generować
