@@ -1,106 +1,78 @@
-// ffmpeg-auto.js – 2025-08-04
-// Ładowanie FFmpeg.wasm w czystej przeglądarce bez bundlera.
+// ffmpeg-auto.js  — wersja błyskawiczna (jedno źródło CDNJS)
+// jeśli chcesz więcej CDN-ów i retry, rozbuduj tablicę LIB_URLS i pętlę importów.
 
-let ffmpeg, fetchFile, _loaded = false, _promise = null;
+let ffmpegInstance = null;
+let fetchFileFn     = null;
+let loaded          = false;
 
-const LIB_CDN = [
-  // gwarantujemy ?module → przepisywanie importów
-  'https://unpkg.com/@ffmpeg/ffmpeg@0.12.15/dist/esm/index.js?module',
-  'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.15/dist/esm/index.js?module',
-  'https://cdnjs.cloudflare.com/ajax/libs/ffmpeg/0.12.15/esm/ffmpeg.min.js',
-  'https://esm.sh/@ffmpeg/ffmpeg@0.12.15',
-  'https://cdn.skypack.dev/@ffmpeg/ffmpeg@0.12.15'
-];
+/* ────────────────────────────────────────────────────────────── */
+/* 1. Jedyny (na razie) URL do biblioteki createFFmpeg/fetchFile */
+const LIB_URL = 'https://cdnjs.cloudflare.com/ajax/libs/ffmpeg/0.12.15/esm/index.js';
 
-const CORE_CDN = [
-  'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.15/dist/umd/ffmpeg-core.js',
-  'https://unpkg.com/@ffmpeg/core@0.12.15/dist/umd/ffmpeg-core.js'
-];
+/* 2. Ścieżka do ffmpeg-core.js – możesz podać własny URL z serwera,
+      zostawiłem CDNJS z tą samą wersją, żeby był kompletny zestaw */
+const CORE_URL =
+  'https://cdnjs.cloudflare.com/ajax/libs/ffmpeg/0.12.15/ffmpeg-core.js';
 
-export async function ensureFFmpeg({
-  log = false,
-  timeoutMs = 25_000,
-  ffmpegLibs = LIB_CDN,
-  corePaths  = CORE_CDN
-} = {}) {
-  if (_loaded && ffmpeg) return { ffmpeg, fetchFile };
-  if (_promise) return _promise;
+/* ────────────────────────────────────────────────────────────── */
+export async function ensureFFmpeg({ log = false, timeoutMs = 25000 } = {}) {
+  if (loaded && ffmpegInstance) return { ffmpeg: ffmpegInstance, fetchFile: fetchFileFn };
 
-  _promise = (async () => {
-    /* 1. Import biblioteki createFFmpeg/fetchFile z pierwszego działającego CDN-u */
-    let createFFmpeg, _fetch, lastErr;
-    for (const url of ffmpegLibs) {
-      try {
-        const mod = await importWithTimeout(url, timeoutMs);
-        createFFmpeg = mod.createFFmpeg || mod.default?.createFFmpeg;
-        _fetch       = mod.fetchFile   || mod.default?.fetchFile;
-        if (createFFmpeg && _fetch) break;
-      } catch (e) { lastErr = e; }
-    }
-    if (!createFFmpeg) {
-      console.error('Nie udało się załadować żadnej wersji @ffmpeg/ffmpeg.', lastErr);
-      return { ffmpeg: null, fetchFile: null };
-    }
+  // 1) Pobieramy bibliotekę z CDNJS (ESM, względne importy – NIE ma bare-specifierów)
+  const { createFFmpeg, fetchFile } = await importWithTimeout(LIB_URL, timeoutMs);
 
-    /* 2. Ładuj FFmpeg-core z kolei CDN-ów  */
-    for (const core of corePaths) {
-      try {
-        const inst = createFFmpeg({ log, corePath: core });
-        await Promise.race([
-          inst.load(),
-          timeout(timeoutMs, `FFmpeg load timeout (${core})`)
-        ]);
-        ffmpeg = inst; fetchFile = _fetch; _loaded = true;
-        return { ffmpeg, fetchFile };
-      } catch (e) { lastErr = e; }
-    }
-    console.error('Żaden ffmpeg-core nie zadziałał.', lastErr);
-    return { ffmpeg: null, fetchFile: null };
-  })();
+  // 2) Tworzymy instancję z jedynym corePath
+  const ffmpeg = createFFmpeg({ log, corePath: CORE_URL });
+  await Promise.race([
+    ffmpeg.load(),
+    timeout(timeoutMs, 'FFmpeg load timeout'),
+  ]);
 
-  return _promise;
+  ffmpegInstance = ffmpeg;
+  fetchFileFn    = fetchFile;
+  loaded         = true;
+
+  return { ffmpeg: ffmpegInstance, fetchFile: fetchFileFn };
 }
 
-/* ---------- POMOCNICZE ---------- */
-const timeout = (ms, msg) => new Promise((_, r) => setTimeout(() => r(new Error(msg)), ms));
-const importWithTimeout = (u, ms) =>
-  Promise.race([ import(/* @vite-ignore */ u), timeout(ms, `Import timeout (${u})`) ]);
+/* ────────────────────────────────────────────────────────────── */
+/* API konwersji – zostawiłem tylko MP4, WebM i WAV.
+   Dodasz pozostałe w razie potrzeby. */
+export const convertToMp4 = (file, { crf = 23, preset = 'medium', aBitrate = '160k' } = {}) =>
+  exec(file, [
+    '-c:v', 'libx264', '-preset', preset, '-crf', String(crf),
+    '-c:a', 'aac', '-b:a', aBitrate, '-movflags', '+faststart',
+  ], 'out.mp4', 'video/mp4');
 
-async function exec(file, args, out, mime) {
+export const convertToWebm = (file, { crf = 30, aBitrate = '128k' } = {}) =>
+  exec(file, [
+    '-c:v', 'libvpx-vp9', '-crf', String(crf), '-b:v', '0',
+    '-c:a', 'libopus', '-b:a', aBitrate,
+  ], 'out.webm', 'video/webm');
+
+export const extractToWav = (file, { sampleRate = 48000 } = {}) =>
+  exec(file, [
+    '-vn', '-acodec', 'pcm_s16le', '-ar', String(sampleRate), '-ac', '2',
+  ], 'out.wav', 'audio/wav');
+
+/* ─────────────────── helpers ─────────────────── */
+async function exec(file, args, outName, mime) {
   const { ffmpeg, fetchFile } = await ensureFFmpeg();
-  if (!ffmpeg) throw new Error('FFmpeg niedostępny (wszystkie CDN-y padły)');
-  const inName  = `i.${file.name.split('.').pop()}`;
+  if (!ffmpeg) throw new Error('FFmpeg niedostępny – nie udało się załadować z CDN.');
+
+  const inExt  = (file.name?.split('.').pop() || 'bin').toLowerCase();
+  const inName = `src.${inExt}`;
+
   ffmpeg.FS('writeFile', inName, await fetchFile(file));
-  await ffmpeg.run('-i', inName, ...args, out);
-  const buf = ffmpeg.FS('readFile', out);
-  try { ffmpeg.FS('unlink', inName); ffmpeg.FS('unlink', out); } catch {}
-  return new Blob([buf.buffer], { type: mime });
+  await ffmpeg.run('-i', inName, ...args, outName);
+  const data = ffmpeg.FS('readFile', outName);
+
+  try { ffmpeg.FS('unlink', inName); ffmpeg.FS('unlink', outName); } catch {}
+  return new Blob([data.buffer], { type: mime });
 }
 
-/* ---------- API KONWERSJI – takie samo jak wcześniej ---------- */
-export const convertToMp4 = (f,o={}) => exec(f,[
-  '-c:v','libx264','-preset',o.preset||'medium','-crf',String(o.crf??23),
-  '-c:a','aac','-b:a',o.aBitrate||'160k','-movflags','+faststart'
-],'out.mp4','video/mp4');
+const importWithTimeout = (url, ms) =>
+  Promise.race([ import(/* @vite-ignore */ url), timeout(ms, `Import timeout ${url}`) ]);
 
-export const convertToWebm = (f,o={}) => exec(f,[
-  '-c:v','libvpx-vp9','-crf',String(o.crf??30),'-b:v','0',
-  '-c:a','libopus','-b:a',o.aBitrate||'128k'
-],'out.webm','video/webm');
-
-export const convertToMov = (f,o={}) => exec(f,[
-  '-c:v','libx264','-preset',o.preset||'medium','-crf',String(o.crf??23),
-  '-c:a','aac','-b:a',o.aBitrate||'160k'
-],'out.mov','video/quicktime');
-
-export const convertToMkv = (f,o={}) => exec(f,[
-  '-c:v','libx264','-preset',o.preset||'medium','-crf',String(o.crf??23),
-  '-c:a','aac','-b:a',o.aBitrate||'160k'
-],'out.mkv','video/x-matroska');
-
-export const convertMp4ToMp3 = (f,o={}) => exec(f,
-  ['-vn','-b:a',o.bitrate||'192k','-f','mp3'],'out.mp3','audio/mpeg');
-
-export const extractToWav = (f,o={}) => exec(f,
-  ['-vn','-acodec','pcm_s16le','-ar',String(o.sampleRate??48_000),'-ac','2'],
-  'out.wav','audio/wav');
+const timeout = (ms, msg) =>
+  new Promise((_, r) => setTimeout(() => r(new Error(msg)), ms));
