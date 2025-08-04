@@ -1,44 +1,46 @@
-import { once, synthFrames, concatBlobs } from './utils.js';
+// video.js
+import {
+  convertToMp4,
+  convertToWebm,
+  convertToMov,
+  convertToMkv,
+} from './ffmpeg-auto.js';
 
-export async function convertVideo(file, fmt){
-  if(['mp4','webm','gif','mov'].includes(fmt)){
-    console.warn('FFmpeg video not available; używane lekkie fallbacky.');
+/**
+ * Konwertuje plik wideo do zadanego formatu.
+ * @param {File|Blob} file - wejściowy plik wideo
+ * @param {string} fmt - docelowy format, np. 'mp4', 'webm', 'mov', 'mkv'
+ * @returns {Promise<Blob>} wynikowy blob wideo
+ */
+export async function convertVideo(file, fmt) {
+  const normalized = (fmt || '').replace(/-lite$/i, '').toLowerCase();
+  const inputExt = (file.name?.split('.').pop() || '').toLowerCase();
+
+  // Jeśli format docelowy jest taki sam jak źródłowy, zwróć kopię bez konwersji
+  if (inputExt === normalized) {
+    return file.slice();
   }
-  let frames = [];
-  try{
-    const blobUrl = URL.createObjectURL(file);
-    const vid = document.createElement('video');
-    vid.muted = true; vid.src = blobUrl; vid.preload = 'auto';
-    await vid.play().catch(()=>{});
-    await once(vid, 'loadeddata', 2000).catch(()=>{});
-    const dur = isFinite(vid.duration) ? vid.duration : 3;
-    const w = Math.min(640, vid.videoWidth || 320);
-    const h = Math.round((vid.videoHeight||180) * (w/(vid.videoWidth||320)));
-    const can = document.createElement('canvas');
-    can.width = w; can.height = h;
-    const ctx = can.getContext('2d');
-    const sampleFrames = 10;
-    for(let i=0;i<sampleFrames;i++){
-      const t = (dur * i) / sampleFrames;
-      vid.currentTime = t;
-      await once(vid,'seeked', 800).catch(()=>{});
-      ctx.drawImage(vid, 0, 0, w, h);
-      const frame = await new Promise(r=>can.toBlob(b=>r(b),'image/webp',0.85));
-      if(frame) frames.push(frame);
+
+  try {
+    switch (normalized) {
+      case 'mp4':
+        return await convertToMp4(file);
+      case 'webm':
+        return await convertToWebm(file);
+      case 'mov':
+        return await convertToMov(file);
+      case 'mkv':
+        return await convertToMkv(file);
+      default:
+        console.warn(`Nieobsługiwany format wideo: "${fmt}", zwracam oryginał.`); 
+        return file.slice();
     }
-    URL.revokeObjectURL(blobUrl);
-  }catch(e){ frames = []; }
-  if(!frames.length) frames = await synthFrames(10, 360, 200);
-
-  if(fmt === 'gif-lite'){
-    const concat = await concatBlobs(frames, 'image/webp');
-    return new Blob([await concat.arrayBuffer()], {type:'image/gif'});
+  } catch (e) {
+    console.error(`Błąd konwersji wideo do ${normalized}:`, e);
+    // W razie błędu zwróć oryginał, żeby UI mogło dalej działać
+    return file.slice();
   }
-  if(fmt === 'webm-lite'){
-    return new Blob([await frames[0].arrayBuffer()], {type:'video/webm'});
-  }
-  if(fmt === 'thumb-webp'){
-    return frames[0];
-  }
-  return new Blob([await frames[0].arrayBuffer()], {type:'video/webm'});
 }
+
+// Lista wspieranych formatów (opcjonalnie do użycia przy walidacji)
+export const supportedVideoFormats = ['mp4', 'webm', 'mov', 'mkv'];
