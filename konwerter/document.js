@@ -166,4 +166,3 @@ export async function convertAndRename(file, fmt = 'txt') {
   const base = file.name.replace(/\.[^.]+$/, ''); // usuń starą końcówkę
   return new File([blob], `${base}.${ext}`, { type: blob.type });
 }
-
