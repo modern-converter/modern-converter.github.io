@@ -12,7 +12,7 @@ import {
  * @param {string} fmt - docelowy format, np. 'mp4', 'webm', 'mov', 'mkv'
  * @returns {Promise<Blob>} wynikowy blob wideo
  */
-export async function convertVideo(file, fmt) {
+async function convertVideo(file, fmt) {
   const normalized = (fmt || '').replace(/-lite$/i, '').toLowerCase();
   const inputExt = (file.name?.split('.').pop() || '').toLowerCase();
 
@@ -37,10 +37,13 @@ export async function convertVideo(file, fmt) {
     }
   } catch (e) {
     console.error(`Błąd konwersji wideo do ${normalized}:`, e);
-    // W razie błędu zwróć oryginał, żeby UI mogło dalej działać
     return file.slice();
   }
 }
 
-// Lista wspieranych formatów (opcjonalnie do użycia przy walidacji)
+// Named export i domyślny
+export { convertVideo };
+export default convertVideo;
+
+// Dodatkowo: lista wspieranych formatów
 export const supportedVideoFormats = ['mp4', 'webm', 'mov', 'mkv'];
