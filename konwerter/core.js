@@ -1,435 +1,242 @@
-import { convertImage } from './image.js';
-import { convertAudio } from './audio.js';
-import { convertDocument } from './document.js';
-import { convertVideo } from './video.js';
+/* core.js  — 2025-08-04  (wersja bez FFmpeg) */
+import { convertImage }   from './image.js';
+import { convertAudio }   from './audio.js';
+import { convertDocument }from './document.js';
+import { convertVideo }   from './video.js';
 import { convertArchive } from './archive.js';
-import { convertCode } from './code.js';
+import { convertCode }    from './code.js';
 
-const $ = s => document.querySelector(s);
+const $  = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 
-// utilities
-function humanSize(bytes) {
-  const GB = 1024 * 1024 * 1024,
-    MB = 1024 * 1024,
-    KB = 1024;
-  if (bytes >= GB) return (bytes / GB).toFixed(2) + ' GB';
-  if (bytes >= MB) return (bytes / MB).toFixed(1) + ' MB';
-  if (bytes >= KB) return (bytes / KB).toFixed(1) + ' KB';
-  return bytes + ' B';
-}
-function truncate(str, len) {
-  if (str.length <= len) return str;
-  return str.slice(0, len - 1) + '…';
-}
+/* util */
+function humanSize(b){const G=1<<30,M=1<<20,K=1<<10;
+  if(b>=G)return(b/G).toFixed(2)+' GB';
+  if(b>=M)return(b/M).toFixed(1)+' MB';
+  if(b>=K)return(b/K).toFixed(1)+' KB';
+  return b+' B';}
+const truncate = (s,n)=>s.length<=n?s:s.slice(0,n-1)+'…';
 
-let files = [];
-let results = [];
-let selectedFormat = '';
+/* ───────────────── global state ───────────────── */
+let files=[], results=[], selectedFormat='';
 
-const extToCategory = {
-  png: 'image',
-  jpg: 'image',
-  jpeg: 'image',
-  webp: 'image',
-  avif: 'image',
-  bmp: 'image',
-  gif: 'image',
-  svg: 'image',
-  ico: 'image',
-  wav: 'audio',
-  mp3: 'audio',
-  m4a: 'audio',
-  ogg: 'audio',
-  flac: 'audio',
-  opus: 'audio',
-  txt: 'document',
-  md: 'document',
-  html: 'document',
-  pdf: 'document',
-  rtf: 'document',
-  json: 'code',
-  csv: 'code',
-  js: 'code',
-  ndjson: 'code',
-  mp4: 'video',
-  webm: 'video',
-  mov: 'video',
-};
-const defaultFormats = {
-  image: ['png', 'jpeg', 'webp', 'avif'],
-  audio: ['mp3', 'wav', 'ogg'],
-  video: ['mp4', 'webm'],
-  document: ['pdf', 'txt', 'md'],
-  code: ['json', 'csv'],
-  archive: ['zip-lite'],
-};
-const formatLabels = {
-  png: 'PNG',
-  jpeg: 'JPEG',
-  webp: 'WebP',
-  avif: 'AVIF',
-  mp4: 'MP4',
-  webm: 'WebM',
-  mp3: 'MP3',
-  wav: 'WAV',
-  ogg: 'OGG',
-  pdf: 'PDF',
-  txt: 'TXT',
-  md: 'Markdown',
-  json: 'JSON',
-  csv: 'CSV',
-  'zip-lite': 'ZIP',
-  'tar-lite': 'TAR',
+/* rozszerzona mapa kategorii */
+const extToCategory={
+  /* obraz */
+  png:'image', jpg:'image', jpeg:'image', webp:'image', avif:'image',
+  bmp:'image', gif:'image', svg:'image', ico:'image',
+  /* audio */
+  wav:'audio', mp3:'audio', m4a:'audio', ogg:'audio', opus:'audio', flac:'audio',
+  aiff:'audio', aif:'audio', au:'audio', amr:'audio', alaw:'audio', ulaw:'audio',
+  w64:'audio', caf:'audio', voc:'audio', ape:'audio', dff:'audio', dsf:'audio',
+  raw:'audio',
+  /* dokumenty + code */
+  txt:'document', md:'document', html:'document', pdf:'document', rtf:'document',
+  json:'code', csv:'code', js:'code', ndjson:'code',
+  /* wideo */
+  mp4:'video', webm:'video', mov:'video'
 };
 
-let dropEl,
-  fileInput,
-  fileListEl,
-  convertBtn,
-  browseBtn,
-  formatOptionsEl;
-let progressBar2,
-  progressText2,
-  progressTitle;
-let downloadAllBtn,
-  convertMoreBtn;
+/* domyślne opcje wyboru formatu w panelu settings */
+const defaultFormats={
+  image   :['png','jpeg','webp','avif'],
+  audio   :['mp3','wav','webm','ogg','flac','aiff','amr'],
+  video   :['mp4','webm'],
+  document:['pdf','txt','md'],
+  code    :['json','csv'],
+  archive :['zip-lite']
+};
+
+/* etykiety przycisków formatów */
+const formatLabels={
+  png:'PNG', jpeg:'JPEG', webp:'WebP', avif:'AVIF',
+  mp4:'MP4', webm:'WebM', mov:'MOV',
+  mp3:'MP3', wav:'WAV', ogg:'OGG', webma:'WebM-audio',
+  flac:'FLAC', aiff:'AIFF', amr:'AMR',
+  pdf:'PDF', txt:'TXT', md:'Markdown',
+  json:'JSON', csv:'CSV',
+  'zip-lite':'ZIP', 'tar-lite':'TAR'
+};
+
+/* ───────────────── dom refs ───────────────── */
+let dropEl,fileInput,fileListEl,convertBtn,browseBtn,formatOptionsEl;
+let progressBar2,progressText2,progressTitle,downloadAllBtn,convertMoreBtn;
 let toastContainer;
 
-function showPage(route) {
-  $$('.page').forEach(p => {
-    p.classList.toggle('active', p.id === 'page-' + route);
-  });
-  $$('.chip').forEach(c => {
-    const r = c.getAttribute('data-route');
-    if (r === route) {
-      c.classList.add('active');
-      c.setAttribute('aria-current', 'page');
-    } else {
-      c.classList.remove('active');
-      c.removeAttribute('aria-current');
-    }
+/* ---------- UI helpers (toast, page nav) ---------- */
+function showPage(route){
+  $$('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+route));
+  $$('.chip').forEach(c=>{
+    const r=c.dataset.route;
+    if(r===route){c.classList.add('active');c.setAttribute('aria-current','page');}
+    else{c.classList.remove('active');c.removeAttribute('aria-current');}
   });
 }
-
-// Toast
-function toast(msg, type = 'ok') {
-  if (!toastContainer) {
-    toastContainer = document.createElement('div');
-    toastContainer.id = 'toast-container';
-    toastContainer.style.position = 'fixed';
-    toastContainer.style.top = '10px';
-    toastContainer.style.right = '10px';
-    toastContainer.style.zIndex = 9999;
-    document.body.appendChild(toastContainer);
+function toast(msg,type='ok'){
+  if(!toastContainer){
+    toastContainer=document.body.appendChild(Object.assign(
+      document.createElement('div'),{id:'toast-container',style:
+      'position:fixed;top:10px;right:10px;z-index:9999'}));
   }
-  const el = document.createElement('div');
-  el.textContent = msg;
-  el.style.background = type === 'err' ? '#ff4d4f' : '#333';
-  el.style.color = '#fff';
-  el.style.padding = '8px 14px';
-  el.style.borderRadius = '6px';
-  el.style.marginTop = '6px';
-  el.style.fontSize = '13px';
-  el.style.opacity = '0';
-  el.style.transition = 'opacity .25s';
+  const el=document.createElement('div');
+  el.textContent=msg;
+  el.style.cssText=`background:${type==='err'?'#ff4d4f':'#333'};color:#fff;
+    padding:8px 14px;border-radius:6px;margin-top:6px;font-size:13px;
+    opacity:0;transition:opacity .25s`;
   toastContainer.appendChild(el);
-  requestAnimationFrame(() => {
-    el.style.opacity = '1';
-  });
-  setTimeout(() => {
-    el.style.opacity = '0';
-    setTimeout(() => el.remove(), 300);
-  }, 2500);
+  requestAnimationFrame(()=>el.style.opacity='1');
+  setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.remove(),300)},2500);
 }
 
-function renderFileList() {
-  if (!fileListEl) return;
-  fileListEl.innerHTML = '';
-  for (const f of files) {
-    const row = document.createElement('div');
-    row.className = 'file';
-    row.innerHTML = `
-      <div class="icon"></div>
-      <div class="meta">
-        <b title="${f.name}">${truncate(f.name, 38)}</b>
-        <small>${humanSize(f.size)}</small>
-      </div>
-      <div class="act">
-        <button class="btn small" aria-label="Usuń">✕</button>
-      </div>
-    `;
-    row.querySelector('button').addEventListener('click', () => {
-      files = files.filter(o => o !== f);
-      onFilesChanged();
-      renderFileList();
-    });
-    fileListEl.appendChild(row);
+/* ---------- settings panel ---------- */
+function buildFormatOptions(){
+  if(!formatOptionsEl) return;
+  formatOptionsEl.innerHTML='';
+  let cat='document';
+  if(files.length){
+    const ext=(files[0].name.split('.').pop()||'').toLowerCase();
+    cat=extToCategory[ext]||'document';
   }
-}
-
-function onFilesChanged() {
-  const settings = document.getElementById('settings-panel');
-  if (!settings) return;
-  if (files.length) {
-    settings.style.display = 'block';
-    if (!selectedFormat) {
-      const ext = (files[0].name.split('.').pop() || '').toLowerCase();
-      const category = extToCategory[ext] || 'document';
-      const defs = defaultFormats[category] || ['txt'];
-      selectedFormat = defs[0];
-    }
-    buildFormatOptions();
-  } else {
-    settings.style.display = 'none';
-  }
-}
-
-function buildFormatOptions() {
-  if (!formatOptionsEl) return;
-  formatOptionsEl.innerHTML = '';
-  let category = 'document';
-  if (files.length) {
-    const ext = (files[0].name.split('.').pop() || '').toLowerCase();
-    category = extToCategory[ext] || 'document';
-  }
-  const options = defaultFormats[category] || ['txt'];
-  options.forEach(fmt => {
-    const btn = document.createElement('button');
-    btn.className = 'format-option';
-    btn.type = 'button';
-    btn.textContent = formatLabels[fmt] || fmt.toUpperCase();
-    btn.setAttribute('data-fmt', fmt);
-    btn.setAttribute('aria-pressed', fmt === selectedFormat ? 'true' : 'false');
-    if (fmt === selectedFormat) {
-      btn.classList.add('selected');
-    }
-    btn.addEventListener('click', () => {
-      selectedFormat = fmt;
-      buildFormatOptions();
-    });
+  (defaultFormats[cat]||['txt']).forEach(fmt=>{
+    const btn=document.createElement('button');
+    btn.type='button'; btn.className='format-option';
+    btn.textContent=formatLabels[fmt]||fmt.toUpperCase();
+    btn.dataset.fmt=fmt;
+    btn.ariaPressed=String(fmt===selectedFormat);
+    if(fmt===selectedFormat) btn.classList.add('selected');
+    btn.onclick=()=>{selectedFormat=fmt;buildFormatOptions();};
     formatOptionsEl.appendChild(btn);
   });
 }
 
-async function convertFile(file, fmt) {
-  const ext = (file.name.split('.').pop() || '').toLowerCase();
-  const category = extToCategory[ext] || 'document';
-  let out;
-  if (category === 'image') out = await convertImage(file, fmt);
-  else if (category === 'audio') out = await convertAudio(file, fmt);
-  else if (category === 'video') out = await convertVideo(file, fmt);
-  else if (category === 'document') out = await convertDocument(file, fmt);
-  else if (category === 'archive') out = await convertArchive(file, fmt);
-  else if (category === 'code') out = await convertCode(file, fmt);
-  else out = file.slice();
-  const base = file.name.replace(/\.[^.]+$/, '');
-  let extension = fmt.replace(/-lite$/, '');
-  const name = `${base}.${extension}`;
-  results.push({ name, blob: out });
-}
-
-function updateProgress(pct) {
-  if (progressBar2) progressBar2.style.width = pct + '%';
-  if (progressText2) progressText2.textContent = pct + '%';
-  if (progressTitle) {
-    progressTitle.textContent = pct >= 100 ? 'Gotowe' : 'Pracujemy nad Twoimi plikami…';
-  }
-}
-
-function resetState() {
-  files = [];
-  results = [];
-  selectedFormat = '';
-  renderFileList();
-  updateProgress(0);
-  if (downloadAllBtn) {
-    downloadAllBtn.classList.add('disabled');
-    downloadAllBtn.setAttribute('aria-disabled', 'true');
-    downloadAllBtn.removeAttribute('href');
-    downloadAllBtn.textContent = 'Pobierz';
-  }
-  onFilesChanged();
-}
-
-function updateDownloadLink() {
-  if (!downloadAllBtn) return;
-  if (!results.length) {
-    downloadAllBtn.removeAttribute('href');
-    downloadAllBtn.removeAttribute('download');
-    downloadAllBtn.classList.add('disabled');
-    downloadAllBtn.setAttribute('aria-disabled', 'true');
-    downloadAllBtn.textContent = 'Pobierz';
-    return;
-  }
-  if (results.length === 1) {
-    const r = results[0];
-    const url = URL.createObjectURL(r.blob);
-    downloadAllBtn.href = url;
-    downloadAllBtn.download = r.name;
-    downloadAllBtn.classList.remove('disabled');
-    downloadAllBtn.removeAttribute('aria-disabled');
-    downloadAllBtn.textContent = 'Pobierz';
-    return;
-  }
-  const header = new TextEncoder().encode(`PACK\nItems:${results.length}\n\n`);
-  const parts = [header];
-  results.forEach((r, idx) => {
-    const meta = new TextEncoder().encode(`--FILE ${idx + 1}-- ${r.name}\n`);
-    parts.push(meta);
-    parts.push(r.blob);
-    parts.push(new TextEncoder().encode('\n'));
-  });
-  const pack = new Blob(parts, { type: 'application/octet-stream' });
-  const url = URL.createObjectURL(pack);
-  downloadAllBtn.href = url;
-  downloadAllBtn.download = 'converted-pack.tar';
-  downloadAllBtn.classList.remove('disabled');
-  downloadAllBtn.removeAttribute('aria-disabled');
-  downloadAllBtn.textContent = 'Pobierz wszystkie';
-}
-
-async function runConversion() {
-  if (!files.length) {
-    toast('Brak plików do konwersji', 'err');
-    return;
-  }
-  results = [];
-  updateProgress(0);
-  showPage('progress');
-
-  if (convertBtn) convertBtn.disabled = true;
-
-  const concurrency = Math.max(
-    1,
-    Math.min(4, navigator.hardwareConcurrency ? Math.floor(navigator.hardwareConcurrency / 2) : 2)
-  );
-  let completed = 0;
-  const total = files.length;
-  const pool = [];
-  const failures = [];
-
-  for (const f of files) {
-    const task = async () => {
-      try {
-        await convertFile(f, selectedFormat);
-      } catch (e) {
-        failures.push({ file: f.name, error: e });
-        console.error(`Błąd konwersji ${f.name}:`, e);
-      } finally {
-        completed++;
-        const pct = Math.round((completed / total) * 100);
-        updateProgress(pct);
-      }
+/* ---------- file list UI ---------- */
+function renderFileList(){
+  if(!fileListEl) return;
+  fileListEl.innerHTML='';
+  files.forEach(f=>{
+    const row=document.createElement('div');
+    row.className='file';
+    row.innerHTML=`
+      <div class="icon"></div>
+      <div class="meta">
+        <b title="${f.name}">${truncate(f.name,38)}</b>
+        <small>${humanSize(f.size)}</small>
+      </div>
+      <div class="act"><button class="btn small" aria-label="Usuń">✕</button></div>`;
+    row.querySelector('button').onclick=()=>{
+      files=files.filter(x=>x!==f);
+      onFilesChanged(); renderFileList();
     };
-    pool.push(task);
-  }
-
-  const executing = [];
-  while (pool.length) {
-    while (executing.length < concurrency && pool.length) {
-      const fn = pool.shift();
-      const p = fn();
-      executing.push(p);
-      p.finally(() => {
-        const idx = executing.indexOf(p);
-        if (idx !== -1) executing.splice(idx, 1);
-      });
-    }
-    await Promise.race(executing);
-  }
-  await Promise.all(executing);
-
-  updateProgress(100);
-  updateDownloadLink();
-
-  if (failures.length) {
-    toast(`Konwersja zakończona: ${failures.length} plik(ów) niepowodzenie`, 'err');
-    // Można dodać szczegóły w konsoli lub rozwijaną listę
-  } else {
-    toast('Konwersja zakończona', 'ok');
-  }
-
-  if (convertBtn) convertBtn.disabled = false;
-}
-
-function attachEventListeners() {
-  $$('.chip').forEach(c => {
-    c.addEventListener('click', e => {
-      e.preventDefault();
-      const r = c.getAttribute('data-route');
-      if (r) showPage(r);
-    });
+    fileListEl.appendChild(row);
   });
-
-  if (dropEl) {
-    ['dragenter', 'dragover'].forEach(ev =>
-      dropEl.addEventListener(ev, e => {
-        e.preventDefault();
-        e.stopPropagation();
-        dropEl.classList.add('drag');
-      })
-    );
-    ['dragleave', 'drop'].forEach(ev =>
-      dropEl.addEventListener(ev, e => {
-        e.preventDefault();
-        e.stopPropagation();
-        dropEl.classList.remove('drag');
-      })
-    );
-    dropEl.addEventListener('drop', e => {
-      const dt = e.dataTransfer;
-      if (dt && dt.files) addFiles(dt.files);
-    });
-  }
-
-  if (browseBtn && fileInput) {
-    browseBtn.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', () => {
-      if (fileInput.files) addFiles(fileInput.files);
-    });
-  }
-
-  if (convertBtn) {
-    convertBtn.addEventListener('click', async () => {
-      await runConversion();
-    });
-  }
-
-  if (convertMoreBtn) {
-    convertMoreBtn.addEventListener('click', () => {
-      resetState();
-      showPage('home');
-    });
-  }
-
-  // dynamic: rebuild format options if selection changed externally
-  // (niekonieczne, ale defensywne)
+}
+function onFilesChanged(){
+  const panel=$('#settings-panel');
+  if(!panel)return;
+  if(files.length){
+    panel.style.display='block';
+    if(!selectedFormat){
+      const ext=(files[0].name.split('.').pop()||'').toLowerCase();
+      selectedFormat=(defaultFormats[extToCategory[ext]||'document']||['txt'])[0];
+    }
+    buildFormatOptions();
+  }else panel.style.display='none';
 }
 
-function addFiles(list) {
-  for (const f of list) {
-    if (!f.name) continue;
-    files.push(f);
+/* ---------- konwersja jednego pliku ---------- */
+async function convertFile(file,fmt){
+  const ext=(file.name.split('.').pop()||'').toLowerCase();
+  const cat=extToCategory[ext]||'document';
+  let out;
+  try{
+    if(cat==='image')     out=await convertImage(file,fmt);
+    else if(cat==='audio')out=await convertAudio(file,fmt);
+    else if(cat==='video')out=await convertVideo(file,fmt);
+    else if(cat==='document')out=await convertDocument(file,fmt);
+    else if(cat==='archive') out=await convertArchive(file,fmt);
+    else if(cat==='code')    out=await convertCode(file,fmt);
+    else out=file.slice();
+  }catch(e){
+    console.warn(`Błąd konwersji "${file.name}" → ${fmt}:`,e);
+    out=file.slice();
   }
-  renderFileList();
-  onFilesChanged();
+  const base=file.name.replace(/\.[^.]+$/,'');
+  const name=`${base}.${fmt.replace(/-lite$/,'')}`;
+  results.push({name,blob:out});
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  dropEl = document.getElementById('drop');
-  fileInput = document.getElementById('fileInput');
-  fileListEl = document.getElementById('fileList');
-  convertBtn = document.getElementById('convertBtn');
-  browseBtn = document.getElementById('browseBtn');
-  formatOptionsEl = document.getElementById('formatOptions');
-  progressBar2 = document.getElementById('progressBar2');
-  progressText2 = document.getElementById('progressText2');
-  progressTitle = document.getElementById('progressTitle');
-  downloadAllBtn = document.getElementById('downloadAll');
-  convertMoreBtn = document.getElementById('convertMore');
+/* ---------- progress utility ---------- */
+function updateProgress(p){if(progressBar2)progressBar2.style.width=p+'%';
+  if(progressText2)progressText2.textContent=p+'%';
+  if(progressTitle)progressTitle.textContent=p>=100?'Gotowe':'Pracujemy…';}
 
-  attachEventListeners();
-  resetState();
-  showPage('home');
+/* ---------- conversion orchestrator ---------- */
+async function runConversion(){
+  if(!files.length){toast('Brak plików','err');return;}
+  results=[];updateProgress(0);showPage('progress');if(convertBtn)convertBtn.disabled=true;
+  const conc=Math.max(1,Math.min(4,navigator.hardwareConcurrency?Math.floor(navigator.hardwareConcurrency/2):2));
+  let done=0, fail=0;
+  const queue=[...files].map(f=>async()=>{try{await convertFile(f,selectedFormat);}catch{fail++;}
+    done++;updateProgress(Math.round(done/files.length*100));});
+  const running=[];
+  while(queue.length||running.length){
+    while(running.length<conc&&queue.length) running.push(queue.shift()().finally(()=>{
+      running.splice(running.indexOf(this),1);}));
+    await Promise.race(running);
+  }
+  updateProgress(100);updateDownloadLink();
+  toast(fail?`Zakończone z ${fail} błędami`:'Konwersja zakończona');
+  if(convertBtn)convertBtn.disabled=false;
+}
+
+/* ---------- download helpers ---------- */
+function updateDownloadLink(){
+  if(!downloadAllBtn)return;
+  if(!results.length){downloadAllBtn.classList.add('disabled');downloadAllBtn.ariaDisabled='true';
+    downloadAllBtn.removeAttribute('href');downloadAllBtn.textContent='Pobierz';return;}
+  if(results.length===1){
+    const {blob,name}=results[0];
+    downloadAllBtn.href=URL.createObjectURL(blob);
+    downloadAllBtn.download=name;
+    downloadAllBtn.classList.remove('disabled');downloadAllBtn.removeAttribute('aria-disabled');
+    downloadAllBtn.textContent='Pobierz';return;}
+  const header=new TextEncoder().encode(`PACK\nItems:${results.length}\n\n`);
+  const parts=[header];
+  results.forEach((r,i)=>{parts.push(new TextEncoder().encode(`--FILE ${i+1}-- ${r.name}\n`));
+    parts.push(r.blob);parts.push(new TextEncoder().encode('\n'));});
+  const tar=new Blob(parts,{type:'application/octet-stream'});
+  downloadAllBtn.href=URL.createObjectURL(tar);
+  downloadAllBtn.download='converted-pack.tar';
+  downloadAllBtn.classList.remove('disabled');downloadAllBtn.textContent='Pobierz wszystkie';
+}
+
+/* ---------- file add/remove ---------- */
+function addFiles(list){
+  for(const f of list) if(f.name) files.push(f);
+  renderFileList(); onFilesChanged();
+}
+
+/* ---------- init ---------- */
+function attachEventListeners(){
+  $$('.chip').forEach(c=>c.onclick=e=>{e.preventDefault();showPage(c.dataset.route);});
+  if(dropEl){
+    ['dragenter','dragover'].forEach(ev=>dropEl.addEventListener(ev,e=>{
+      e.preventDefault();dropEl.classList.add('drag');}));
+    ['dragleave','drop'].forEach(ev=>dropEl.addEventListener(ev,e=>{
+      e.preventDefault();dropEl.classList.remove('drag');}));
+    dropEl.addEventListener('drop',e=>addFiles(e.dataTransfer.files));
+  }
+  browseBtn?.addEventListener('click',()=>fileInput.click());
+  fileInput?.addEventListener('change',()=>addFiles(fileInput.files));
+  convertBtn?.addEventListener('click',runConversion);
+  convertMoreBtn?.addEventListener('click',()=>{resetState();showPage('home');});
+}
+
+/* ---------- DOMContentLoaded ---------- */
+window.addEventListener('DOMContentLoaded',()=>{
+  dropEl=$('#drop'); fileInput=$('#fileInput'); fileListEl=$('#fileList');
+  convertBtn=$('#convertBtn'); browseBtn=$('#browseBtn'); formatOptionsEl=$('#formatOptions');
+  progressBar2=$('#progressBar2'); progressText2=$('#progressText2');
+  progressTitle=$('#progressTitle'); downloadAllBtn=$('#downloadAll'); convertMoreBtn=$('#convertMore');
+  attachEventListeners(); resetState(); showPage('home');
 });
