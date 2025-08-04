@@ -1,8 +1,8 @@
 /* ---------------------------------------------------------------
-   converter-final.js  –  self-contained TXT/MD/HTML/RTF/PDF helper
+   converter-final.js  –  self-contained TXT / MD / HTML / RTF / PDF
    ------------------------------------------------------------- */
 
-/* ---------- small helpers ------------------------------------ */
+/* ---------- generic helpers ------------------------------------ */
 const escapeHTML = (s = '') =>
   s.replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 
@@ -19,36 +19,44 @@ async function tryReadText(file, enc = 'utf-8') {
   });
 }
 
-/* ---------- STRICT-MODE Mini PDF generator ------------------- */
-/* – one A4 page, Helvetica 12 pt; returns Uint8Array            */
+/* ---------- safe single-byte encoder --------------------------- */
+const ascii = s => Uint8Array.from(
+  [...s].map(ch => {
+    const c = ch.charCodeAt(0);
+    /* keep printable ASCII and LF; everything else → “?” (0x3F)          */
+    return (c === 0x0A || (c >= 0x20 && c <= 0x7E)) ? c : 0x3F;
+  })
+);
+
+/* ---------- Mini-PDF generator (1 page, Helvetica) ------------- */
 function generateMiniPDF(text = '') {
 
-  /* internal helpers */
-  const ascii  = s => Uint8Array.from([...s].map(c => c.charCodeAt(0) & 0xFF));
-  const parts  = [];                  // Uint8Array[]
-  const offs   = [0];                 // x-ref offsets (entry 0 = free list)
-  let   pos    = 0;                   // running position
-  const push   = u8 => (parts.push(u8), pos += u8.length);
-  const pushS  = s  => push(ascii(s));
+  /* internal buffers ------------------------------------------- */
+  const parts = [];        // Uint8Array[]
+  const offs  = [0];       // object byte offsets (xref index 0 = free)
+  let   pos   = 0;         // running byte position
+  const push  = u8 => { parts.push(u8); pos += u8.length; };
+  const pushS = s  => push(ascii(s));
 
-  /* PDF header -------------------------------------------------- */
-  pushS('%PDF-1.4\n');                                   // version
-  push(Uint8Array.of(0x25,0xE2,0xE3,0xCF,0xD3,0x0A));    // binary marker “%âãÏÓ\n”
+  /* header ------------------------------------------------------ */
+  pushS('%PDF-1.4\n');
+  push(Uint8Array.of(0x25,0xE2,0xE3,0xCF,0xD3,0x0A));   // %âãÏÓ\n
 
-  /* page stream (text lines) ----------------------------------- */
+  /* content stream --------------------------------------------- */
   const esc = s => s.replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)');
   const body = ['BT','/F1 12 Tf'];
   let y = 820;
-  for (const ln of text.split(/\r?\n/)) {
+  for (const lnRaw of text.split(/\r?\n/)) {
     if (y < 50) break;
-    body.push(`1 0 0 1 50 ${y} Tm (${esc(ln)}) Tj`);
+    const lnSafe = lnRaw.replace(/[^\x20-\x7E]/g,'?');   // strip non-ASCII
+    body.push(`1 0 0 1 50 ${y} Tm (${esc(lnSafe)}) Tj`);
     y -= 14;
   }
   body.push('ET');
   const streamBytes = ascii(body.join('\n'));
   const streamLen   = streamBytes.length;
 
-  /* objects 1 – 4 ---------------------------------------------- */
+  /* objects 1-4 ------------------------------------------------- */
   const obj = s => { offs.push(pos); pushS(s); };
   obj('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
   obj('2 0 obj\n<< /Type /Pages /Count 1 /Kids [3 0 R] >>\nendobj\n');
@@ -56,30 +64,30 @@ function generateMiniPDF(text = '') {
      '   /Resources << /Font << /F1 4 0 R >> >>\n   /Contents 5 0 R >>\nendobj\n');
   obj('4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n');
 
-  /* object 5 – content stream ---------------------------------- */
+  /* object 5 – stream ------------------------------------------ */
   offs.push(pos);
   pushS(`5 0 obj\n<< /Length ${streamLen} >>\nstream\n`);
-  push(streamBytes);                             // raw bytes – no re-encoding
+  push(streamBytes);                     // raw bytes, no re-encoding
   pushS('\nendstream\nendobj\n');
 
-  /* cross-reference table -------------------------------------- */
+  /* x-ref ------------------------------------------------------- */
   const xrefPos = pos;
   pushS(`xref\n0 ${offs.length}\n`);
-  pushS('0000000000 65535 f \n');                // free list entry (exactly 20 B incl. LF)
-  offs.slice(1).forEach(o =>
-    pushS(`${String(o).padStart(10,'0')} 00000 n \n`));    // 20 B per entry
+  pushS('0000000000 65535 f \n');        // free list entry
+  for (let i = 1; i < offs.length; i++)
+    pushS(`${String(offs[i]).padStart(10,'0')} 00000 n \n`);
 
-  /* trailer ----------------------------------------------------- */
+  /* trailer & EOF ---------------------------------------------- */
   pushS(`trailer\n<< /Size ${offs.length} /Root 1 0 R >>\n` +
         `startxref\n${xrefPos}\n%%EOF\n`);
 
-  /* concatenate all chunks ------------------------------------- */
+  /* concatenate ------------------------------------------------- */
   const out = new Uint8Array(pos);
   let p = 0; for (const u of parts) { out.set(u, p); p += u.length; }
   return out;
 }
 
-/* ---------- generic helpers ----------------------------------- */
+/* ---------- Blob helpers -------------------------------------- */
 const toBlob  = (chunks, type) => new Blob(chunks, { type });
 const toUint8 = d =>
       d instanceof Uint8Array ? d
