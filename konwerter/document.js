@@ -111,6 +111,7 @@ h1{margin-top:0}
 <h1>${escapeHTML(file.name)}</h1>
 <div>${safe}</div>`], 'text/html;charset=utf-8'); }
 
+    case 'pdf':
     case 'pdf-lite': {
       const pdf = toUint8(generateMiniPDF(txt.slice(0, 20_000)));
       return toBlob([pdf], 'application/pdf'); }
