@@ -1,77 +1,94 @@
 // ffmpeg-auto.js
-// Ładuje FFmpeg.wasm z CDN bez zależności od bundlera (bez bare module specifier).
+// Odporne ładowanie FFmpeg.wasm z CDN-ów bez zakładania bundlera.
+
 let ffmpegInstance = null;
 let fetchFileFn = null;
 let loaded = false;
 let loadingPromise = null;
 
+const DEFAULT_FFMPEG_LIBS = [
+  'https://cdn.skypack.dev/@ffmpeg/ffmpeg@0.12.6',
+  'https://esm.sh/@ffmpeg/ffmpeg@0.12.6',
+];
+const DEFAULT_CORE_PATHS = [
+  'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/ffmpeg-core.js',
+  'https://unpkg.com/@ffmpeg/core@0.12.6/ffmpeg-core.js',
+];
+
 /**
- * Upewnij się, że FFmpeg jest załadowany. Próbuje CDN-ów dla samej biblioteki i core.
+ * Próbuje dynamicznie zaimportować moduł z timeoutem.
+ */
+async function importWithTimeout(url, timeoutMs) {
+  return Promise.race([
+    import(/* @vite-ignore */ url),
+    new Promise((_, rej) =>
+      setTimeout(() => rej(new Error(`Import timeout dla ${url}`)), timeoutMs)
+    ),
+  ]);
+}
+
+/**
+ * Upewnij się, że FFmpeg jest załadowany.
  * @param {Object} options
  * @param {boolean} options.log
- * @param {string|string[]} options.corePath - URL lub lista URL-i do ffmpeg-core.js
- * @param {string|string[]} options.ffmpegPath - URL lub lista URL-i do skryptu @ffmpeg/ffmpeg (dist/ffmpeg.min.js)
+ * @param {string|string[]} options.corePath - URL-e do ffmpeg-core.js
+ * @param {string|string[]} options.ffmpegLibs - URL-e do ESM-friendly @ffmpeg/ffmpeg
  * @param {number} options.timeoutMs
  */
 export async function ensureFFmpeg({
   log = false,
-  corePath = [
-    'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/ffmpeg-core.js',
-    'https://unpkg.com/@ffmpeg/core@0.12.6/ffmpeg-core.js',
-  ],
-  ffmpegPath = [
-    'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.6/dist/ffmpeg.min.js',
-    'https://unpkg.com/@ffmpeg/ffmpeg@0.12.6/dist/ffmpeg.min.js',
-  ],
+  corePath = DEFAULT_CORE_PATHS,
+  ffmpegLibs = DEFAULT_FFMPEG_LIBS,
   timeoutMs = 25000,
 } = {}) {
   if (loaded && ffmpegInstance && fetchFileFn) return { ffmpeg: ffmpegInstance, fetchFile: fetchFileFn };
   if (loadingPromise) return loadingPromise;
 
   loadingPromise = (async () => {
-    // Upewnij się, że to tablice
-    const corePaths = Array.isArray(corePath) ? corePath : [corePath];
-    const ffmpegPaths = Array.isArray(ffmpegPath) ? ffmpegPath : [ffmpegPath];
+    const cores = Array.isArray(corePath) ? corePath : [corePath];
+    const libs = Array.isArray(ffmpegLibs) ? ffmpegLibs : [ffmpegLibs];
 
-    let lastErr = null;
-
-    // Spróbuj załadować samą bibliotekę @ffmpeg/ffmpeg z jednego z CDN-ów
     let createFFmpeg, fetchFile;
-    for (const libUrl of ffmpegPaths) {
+    let lastLibError = null;
+
+    // Załaduj bibliotekę @ffmpeg/ffmpeg z jednego z ESM CDN-ów
+    for (const libUrl of libs) {
       try {
-        const module = await import(/* @vite-ignore */ libUrl);
+        const module = await importWithTimeout(libUrl, timeoutMs);
         if (module && module.createFFmpeg && module.fetchFile) {
           createFFmpeg = module.createFFmpeg;
           fetchFile = module.fetchFile;
           break;
         } else {
-          console.warn(`Załadowano moduł z ${libUrl}, ale brak createFFmpeg/fetchFile.`); 
+          console.warn(`Zaimportowano ${libUrl}, ale brak createFFmpeg/fetchFile.`); 
         }
       } catch (e) {
         console.warn(`Nie udało się zaimportować FFmpeg z ${libUrl}:`, e);
-        lastErr = e;
+        lastLibError = e;
       }
     }
+
     if (!createFFmpeg || !fetchFile) {
-      console.error('Żadne źródło @ffmpeg/ffmpeg nie zadziałało.', lastErr);
+      console.error('Żadne źródło @ffmpeg/ffmpeg nie zadziałało.', lastLibError);
       loaded = false;
       return { ffmpeg: null, fetchFile: null };
     }
 
-    // Teraz próba stworzenia instancji z różnymi corePath
-    for (let attempt = 0; attempt < corePaths.length; attempt++) {
-      const path = corePaths[attempt];
+    let lastCoreError = null;
+    // Teraz spróbuj załadować core z różnych ścieżek
+    for (let attempt = 0; attempt < cores.length; attempt++) {
+      const path = cores[attempt];
       try {
         const inst = createFFmpeg({
           log,
           corePath: path,
           progress: ({ ratio }) => {
-            // Można nasłuchiwać przez eventy z zewnątrz, jeśli potrzeba
+            // Można obserwować postęp przez eventy z zewnątrz jeśli potrzeba
             // window.dispatchEvent(new CustomEvent('ffmpeg-progress', { detail: ratio }));
           },
         });
 
-        // Timeout przy ładowaniu
+        // Timeout przy load()
         await Promise.race([
           inst.load(),
           new Promise((_, rej) =>
@@ -85,16 +102,15 @@ export async function ensureFFmpeg({
         return { ffmpeg: ffmpegInstance, fetchFile: fetchFileFn };
       } catch (e) {
         console.warn(`Nie udało się załadować FFmpeg.wasm z ${path}:`, e);
-        lastErr = e;
-        // backoff przed kolejną próbą
-        if (attempt < corePaths.length - 1) {
+        lastCoreError = e;
+        if (attempt < cores.length - 1) {
+          // prosty backoff
           await new Promise(r => setTimeout(r, 300 * (attempt + 1)));
         }
       }
     }
 
-    // Wszystkie próby zawiodły
-    console.error('Nie udało się załadować żadnej instancji FFmpeg.wasm:', lastErr);
+    console.error('Nie udało się załadować żadnej instancji FFmpeg.wasm:', lastCoreError);
     loaded = false;
     ffmpegInstance = null;
     fetchFileFn = null;
@@ -117,7 +133,6 @@ function guessMimeByExt(ext) {
   return map[ext] || 'application/octet-stream';
 }
 
-// Wspólna funkcja uruchamiająca FFmpeg
 async function runFFmpeg(inst, fetchFile, file, args, outName, mime) {
   const inputExt = (file.name?.split('.').pop() || 'bin').toLowerCase();
   const inName = `input.${inputExt}`;
@@ -125,15 +140,14 @@ async function runFFmpeg(inst, fetchFile, file, args, outName, mime) {
   try {
     inst.FS('writeFile', inName, await fetchFile(file));
   } catch (e) {
-    throw new Error(`Nie udało się zapisać pliku wejściowego do FS: ${e.message}`);
+    throw new Error(`Nie udało się zapisać pliku wejściowego: ${e.message}`);
   }
 
   try {
     await inst.run(...['-i', inName, ...args, outName]);
   } catch (e) {
-    // sprzątaj wejście przy błędzie
     try { inst.FS('unlink', inName); } catch {}
-    throw new Error(`Błąd podczas wykonywania FFmpeg: ${e.message}`);
+    throw new Error(`FFmpeg run error: ${e.message}`);
   }
 
   let data;
@@ -143,14 +157,13 @@ async function runFFmpeg(inst, fetchFile, file, args, outName, mime) {
     throw new Error(`Nie udało się odczytać pliku wyjściowego: ${e.message}`);
   }
 
-  // czyszczenie
   try { inst.FS('unlink', inName); } catch {}
   try { inst.FS('unlink', outName); } catch {}
 
   return new Blob([data.buffer], { type: mime });
 }
 
-// API konwersji
+// Konwersje
 export async function convertMp4ToMp3(file, { bitrate = '192k', ffmpegOpts } = {}) {
   const { ffmpeg, fetchFile } = await ensureFFmpeg(ffmpegOpts);
   if (!ffmpeg) return await extractAudioFallback(file, 'wav');
@@ -171,7 +184,7 @@ export async function convertMp4ToMp3(file, { bitrate = '192k', ffmpegOpts } = {
 
 export async function convertToMp4(file, { crf = 23, preset = 'medium', aBitrate = '160k', ffmpegOpts } = {}) {
   const { ffmpeg, fetchFile } = await ensureFFmpeg(ffmpegOpts);
-  if (!ffmpeg) throw new Error('FFmpeg nie dostępny (CDN) i brak fallbacku do MP4.');
+  if (!ffmpeg) throw new Error('FFmpeg niedostępny (CDN) i brak fallbacku do MP4.');
   return runFFmpeg(
     ffmpeg,
     fetchFile,
@@ -184,7 +197,7 @@ export async function convertToMp4(file, { crf = 23, preset = 'medium', aBitrate
 
 export async function convertToMov(file, { crf = 23, preset = 'medium', aBitrate = '160k', ffmpegOpts } = {}) {
   const { ffmpeg, fetchFile } = await ensureFFmpeg(ffmpegOpts);
-  if (!ffmpeg) throw new Error('FFmpeg nie dostępny (CDN).');
+  if (!ffmpeg) throw new Error('FFmpeg niedostępny (CDN).');
   return runFFmpeg(
     ffmpeg,
     fetchFile,
@@ -197,7 +210,7 @@ export async function convertToMov(file, { crf = 23, preset = 'medium', aBitrate
 
 export async function convertToWebm(file, { crf = 30, aBitrate = '128k', ffmpegOpts } = {}) {
   const { ffmpeg, fetchFile } = await ensureFFmpeg(ffmpegOpts);
-  if (!ffmpeg) throw new Error('FFmpeg nie dostępny (CDN).');
+  if (!ffmpeg) throw new Error('FFmpeg niedostępny (CDN).');
   return runFFmpeg(
     ffmpeg,
     fetchFile,
@@ -210,7 +223,7 @@ export async function convertToWebm(file, { crf = 30, aBitrate = '128k', ffmpegO
 
 export async function convertToMkv(file, { crf = 23, preset = 'medium', aBitrate = '160k', ffmpegOpts } = {}) {
   const { ffmpeg, fetchFile } = await ensureFFmpeg(ffmpegOpts);
-  if (!ffmpeg) throw new Error('FFmpeg nie dostępny (CDN).');
+  if (!ffmpeg) throw new Error('FFmpeg niedostępny (CDN).');
   return runFFmpeg(
     ffmpeg,
     fetchFile,
@@ -234,7 +247,7 @@ export async function extractToWav(file, { sampleRate = 48000, ffmpegOpts } = {}
   );
 }
 
-// Fallback bez FFmpeg – tylko WAV/WEBM
+// Fallback audio
 export async function extractAudioFallback(file, target = 'wav') {
   const ab = await file.arrayBuffer();
   const actx = new (window.AudioContext || window.webkitAudioContext)();
