@@ -5,42 +5,65 @@ import {
   generateMiniPDF
 } from './utils.js';
 
-export async function convertDocument(file, fmt) {
-  const text = await tryReadText(file);
+/** Pomocnicze, żeby nie powtarzać new Blob([...]) */
+const toBlob = (parts, type) => new Blob(parts, { type });
 
-  /* TXT */
-  if (fmt === 'txt')
-    return new Blob([text], { type: 'text/plain' });
+export async function convertDocument(file, fmt = 'txt') {
+  const format = String(fmt).toLowerCase();        // case-insensitive
+  const text   = await tryReadText(file);           // zakładamy, że rzuca wyjątek gdy nie-txt
 
-  /* Markdown */
-  if (fmt === 'md') {
-    const md = `# Przekonwertowany dokument\n\nOryginał: ${file.name}\n\n---\n\n${text}`;
-    return new Blob([md], { type: 'text/markdown' });
+  switch (format) {
+    /* TXT ------------------------------------------------------------------ */
+    case 'txt':
+      return toBlob([text], 'text/plain;charset=utf-8');
+
+    /* Markdown ------------------------------------------------------------- */
+    case 'md': {
+      const md =
+`# Przekonwertowany dokument
+
+Oryginał: ${file.name}
+
+---
+
+${text}`;
+      return toBlob([md], 'text/markdown;charset=utf-8');
+    }
+
+    /* HTML-lite ------------------------------------------------------------ */
+    case 'html-lite': {
+      const safe = escapeHTML(text).slice(0, 20_000);
+      const html =
+`<!doctype html><meta charset="utf-8">
+<title>${escapeHTML(file.name)}</title>
+<style>
+  body{font-family:system-ui;margin:20px;line-height:1.5;white-space:pre-wrap}
+  h1{margin-top:0}
+</style>
+<h1>${escapeHTML(file.name)}</h1>
+<div>${safe}</div>`;
+      return toBlob([html], 'text/html;charset=utf-8');
+    }
+
+    /* PDF-lite ------------------------------------------------------------- */
+    case 'pdf-lite': {
+      const pdfBytes = generateMiniPDF(text.slice(0, 20_000));
+      const bytes    = pdfBytes instanceof Uint8Array ? pdfBytes
+                      : new Uint8Array(pdfBytes);       // gdy dostaniemy ArrayBuffer
+      return toBlob([bytes], 'application/pdf');
+    }
+
+    /* RTF-lite ------------------------------------------------------------- */
+    case 'rtf-lite': {
+      const rtf =
+`{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 Helvetica;}}\\fs20
+Przekonwertowano z ${escapeRTF(file.name)}\\par
+${escapeRTF(text.slice(0, 5000))}}`;
+      return toBlob([rtf], 'application/rtf');
+    }
+
+    /* Fallback = TXT ------------------------------------------------------- */
+    default:
+      return toBlob([text], 'text/plain;charset=utf-8');
   }
-
-  /* HTML-lite */
-  if (fmt === 'html-lite') {
-    const safe = escapeHTML(text).slice(0, 20_000).replace(/\n/g, '<br>');
-    const html =
-      `<!doctype html><meta charset="utf-8"><title>${escapeHTML(file.name)}</title>` +
-      `<style>body{font-family:system-ui;margin:20px;line-height:1.5}</style>` +
-      `<h1>${escapeHTML(file.name)}</h1><div>${safe}</div>`;
-    return new Blob([html], { type: 'text/html' });
-  }
-
-  /* PDF-lite  */
-  if (fmt === 'pdf-lite') {
-    const pdfBytes = generateMiniPDF(text.slice(0, 20_000));
-    return new Blob([pdfBytes], { type: 'application/pdf' });
-  }
-
-  /* RTF-lite */
-  if (fmt === 'rtf-lite') {
-    const rtf = `{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 Helvetica;}}\\fs20 ` +
-      `Przekonwertowano z ${escapeRTF(file.name)}\\par ${escapeRTF(text.slice(0, 5000))}}`;
-    return new Blob([rtf], { type: 'application/rtf' });
-  }
-
-  /* Fallback = TXT */
-  return new Blob([text], { type: 'text/plain' });
 }
