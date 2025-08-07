@@ -48,7 +48,9 @@ async function mp4ToWebm(file) {
 /* ——— helper: wycinanie audio ——— */
 async function extractAudio(file, targetFmt) {
   const url=URL.createObjectURL(file);
-  const v=document.createElement('video'); v.src=url; v.crossOrigin='anonymous';
+  const v=document.createElement('video'); v.src=url; v.crossOrigin='anonymous'; v.muted=true;
+  await new Promise(r=>{ v.onloadedmetadata=r; v.onerror=r; });
+  await v.play().catch(()=>{});
   const stream=v.captureStream();             // zawiera audio track (jeśli dekodowalne)
   const [audioTrack]=stream.getAudioTracks();
   if(!audioTrack){
@@ -60,14 +62,17 @@ async function extractAudio(file, targetFmt) {
   const rec=new MediaRecorder(new MediaStream([audioTrack]),
     { mimeType:'audio/webm;codecs=opus', audioBitsPerSecond:128000 });
   const chunks=[]; rec.ondataavailable=e=>e.data.size&&chunks.push(e.data);
-  await v.play().catch(()=>{}); rec.start();
-  await new Promise(r=>v.onended=r);
-  rec.stop(); await new Promise(r=>rec.onstop=r);
+  rec.start();
+  v.onended=()=>{ try{rec.stop();}catch{} };
+  // Jeżeli wideo nie kończy się (brak autoend z blob), ustaw timeout wg długości
+  const fallbackStop = setTimeout(()=>{ try{ rec.stop(); v.pause(); }catch{} }, Math.max(500, (v.duration||0)*1000));
+  await new Promise(r=>rec.onstop=r);
+  clearTimeout(fallbackStop);
   URL.revokeObjectURL(url);
   const webmBlob=new Blob(chunks,{type:'audio/webm'});
-  if(targetFmt==='webm') return webmBlob;     // bez konwersji
+  if(targetFmt==='webm') return { blob: webmBlob, ext:'webm' };     // bez konwersji
   // Konwertuj WebM→MP3/WAV przez convertAudio
-  return convertAudio(webmBlob,targetFmt);
+  return await convertAudio(webmBlob,targetFmt);
 }
 
 export { convertVideo };
