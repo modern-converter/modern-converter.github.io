@@ -31,8 +31,8 @@ const extToCategory={
 };
 const defaultFormats={
   image:['png','jpeg','webp','avif'],
-  audio:['mp3','wav','webm','ogg','flac','aiff','amr'],
-  video:['mp4','webm'],
+  audio:['mp3','wav','webm'],
+  video:['webm'],
   document:['pdf','txt','md'],
   code:['json','csv'],
   archive:['zip-lite']
@@ -103,7 +103,8 @@ function buildFormatOptions(){
       textContent:formatLabels[fmt]||fmt.toUpperCase()
     });
     btn.dataset.fmt=fmt;
-    if(fmt===selectedFormat){btn.classList.add('selected');btn.ariaPressed='true';}
+    btn.setAttribute('role','radio');
+    btn.setAttribute('aria-checked', String(fmt===selectedFormat));
     btn.onclick=()=>{selectedFormat=fmt;buildFormatOptions();};
     formatOptionsEl.appendChild(btn);
   });
@@ -160,7 +161,9 @@ async function convertFile(file,fmt){
     else if(cat==='code')    out=await convertCode(file,fmt);
     else out=file.slice();
   }catch(e){console.warn(`Błąd konwersji "${file.name}" → ${fmt}:`,e); out=file.slice();}
-  results.push({ name:file.name.replace(/\.[^.]+$/,'')+'.'+fmt.replace(/-lite$/,''), blob:out });
+  const blob = (out && out.blob) ? out.blob : out;
+  const effectiveExt = (out && out.ext) ? out.ext : fmt.replace(/-lite$/,'');
+  results.push({ name:file.name.replace(/\.[^.]+$/,'')+'.'+effectiveExt, blob });
 }
 
 /* ————————————————— runConversion ————————————————— */

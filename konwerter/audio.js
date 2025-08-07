@@ -6,7 +6,7 @@ const LAME_URL = 'https://cdn.jsdelivr.net/npm/lamejs@1.2.0/lame.min.js';
 export async function convertAudio(file, fmt, opt = {}) {
   const target = (fmt || 'wav').toLowerCase();
   const srcExt = (file.name?.split('.').pop() || '').toLowerCase();
-  if (srcExt === target) return file.slice();          // nic do roboty
+  if (srcExt === target) return { blob: file.slice(), ext: target };          // nic do roboty
 
   /* 1. dekoduj wejście */
   let buffer;
@@ -14,14 +14,14 @@ export async function convertAudio(file, fmt, opt = {}) {
     const ac = new (window.AudioContext || window.webkitAudioContext)();
     buffer = await ac.decodeAudioData(await file.arrayBuffer());
     ac.close();
-  } catch { return synthTone(); }
+  } catch { return { blob: await synthTone(), ext: 'wav' }; }
 
   /* 2. kodery */
-  if (target === 'wav')  return pcmToWav(buffer);
-  if (target === 'webm') return pcmToWebm(buffer, opt.bitrate || 128);
-  if (target === 'mp3')  return pcmToMp3(buffer,  opt.bitrate || 128);
+  if (target === 'wav')  return { blob: pcmToWav(buffer), ext: 'wav' };
+  if (target === 'webm') return { blob: await pcmToWebm(buffer, opt.bitrate || 128), ext: 'webm' };
+  if (target === 'mp3')  return { blob: await pcmToMp3(buffer,  opt.bitrate || 128), ext: 'mp3' };
   console.warn(`Brak kodera ${target}; zwracam WAV.`);
-  return pcmToWav(buffer);
+  return { blob: pcmToWav(buffer), ext: 'wav' };
 }
 
 /* ---------- MP3 (lamejs) ---------- */
